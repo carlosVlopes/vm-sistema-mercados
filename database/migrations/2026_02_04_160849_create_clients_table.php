@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->string('phonenumber');
-            $table->string('email');
-            $table->string('password');
-            $table->decimal('percentage', 5, 2);
-            $table->integer('receives_light');
-            $table->longText('register_token');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete()->index();
+            $table->string('name')->nullable()->index();
+            $table->string('phonenumber')->nullable()->index();
+            $table->string('email')->nullable()->index();
+            $table->string('password')->nullable();
+            $table->decimal('percentage', 5, 2)->nullable()->index();
+            $table->integer('receives_light')->nullable()->index();
+            $table->longText('register_token')->nullable();
             $table->timestamps();
         });
     }

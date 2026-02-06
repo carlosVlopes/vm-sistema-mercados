@@ -15,14 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->foreignId('condominium_id')->constrained('condominiums')->cascadeOnDelete();
-            $table->timestamp('date')->useCurrent();
-            $table->timestamp('period_start')->nullable();
-            $table->timestamp('period_end')->nullable();
-            $table->integer('total_value');
-            $table->integer('sales_value');
-            $table->integer('light_value');
-            $table->string('proof_payment');
-            $table->string('proof_light');
+            $table->timestamp('date')->useCurrent()->index();
+            $table->timestamp('period_start')->nullable()->index();
+            $table->timestamp('period_end')->nullable()->index();
+            $table->integer('total_value')->nullable()->index();
+            $table->integer('sales_value')->nullable()->index();
+            $table->integer('light_value')->nullable()->index();
+            $table->string('proof_payment')->nullable();
+            $table->string('proof_light')->nullable();
             $table->timestamps();
         });
     }

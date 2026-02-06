@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phonenumer');
-            $table->decimal('machine_fee', 5, 2);
-            $table->decimal('taxes_fee', 5, 2);
-            $table->longText('api_token');
-            $table->string('password');
-            $table->longText('password_token');
-            $table->dateTime('password_token_expire');
+            $table->string('name')->nullable()->index();
+            $table->string('email')->unique()->nullable()->index();
+            $table->string('phonenumer')->nullable()->index();
+            $table->decimal('machine_fee', 5, 2)->nullable()->index();
+            $table->decimal('taxes_fee', 5, 2)->nullable()->index();
+            $table->longText('api_token')->nullable();
+            $table->string('password')->nullable();
+            $table->longText('password_token')->nullable();
+            $table->dateTime('password_token_expire')->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
 
