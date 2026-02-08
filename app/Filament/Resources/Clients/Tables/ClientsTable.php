@@ -11,6 +11,9 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TernaryFilter;
 
 class ClientsTable
 {
@@ -18,6 +21,11 @@ class ClientsTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->formatStateUsing(fn ($state) => '#'. $state)
+                    ->searchable()
+                    ->sortable(),
                 // Nome
                 TextColumn::make('name')
                     ->label('Nome')
@@ -48,12 +56,19 @@ class ClientsTable
                     ->label('Recebe luz?')
             ])
             ->filters([
-                //
+                TernaryFilter::make('receives_light')
+                    ->label('Recebe luz?')
+                    ->nullable()
+                    ->attribute('receives_light')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('receives_light'),
+                        false: fn (Builder $query) => $query->whereNull('receives_light'),
+                    )
             ])
             ->recordActions([
-                Action::make('Condomínios')
+                Action::make('Repasses')
                     ->button()
-                    ->url('condominios?cliente='),
+                    ->url('teste'),
                 EditAction::make()
                     ->button(),
                 DeleteAction::make()
