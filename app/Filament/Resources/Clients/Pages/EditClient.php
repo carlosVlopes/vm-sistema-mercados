@@ -16,4 +16,15 @@ class EditClient extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        $ids = $this->data['condominiuns_ids'] ?? [];
+
+        dd($ids);
+
+        $this->record
+            ->condominiums()
+            ->sync($ids);
+    }
 }

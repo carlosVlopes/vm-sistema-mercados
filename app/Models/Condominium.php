@@ -11,7 +11,7 @@ class Condominium extends Model
         return $this->belongsToMany(
             Client::class,
             'clients_condominiums',
-            'id',
+            'condominium_id',
             'client_id'
         );
     }

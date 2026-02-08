@@ -18,38 +18,13 @@ class CreateClient extends CreateRecord
 
         $data['register_token'] = hash_hmac('sha256', Str::random(60), $data['name'] . $data['email']);
 
-        $this->condominiuns_ids = $data['condominiuns_ids'] ?? [];
-
-        unset($data['condominiuns_ids']);
-
         return $data;
     }
 
     protected function afterCreate(): void
     {
-        if (! empty($this->data['condominiuns_ids'])) {
+        $ids = $this->data['condominiuns_ids'] ?? [];
 
-        $this->record
-            ->condominiums()
-            ->sync($this->data['condominiuns_ids']);
-    }
-
-        // $token = $this->record->register_token;
-
-        // $link = url('/register/' . $token);
-
-        // Notification::make()
-        //     ->title('Link de cadastro gerado')
-        //     ->body("Copie o link abaixo para enviar ao cliente:\n\n$link")
-        //     ->success()
-        //     ->persistent() // não some sozinho
-        //     ->actions([
-        //         Action::make('Copiar')
-        //             ->button()
-        //             ->extraAttributes([
-        //                 'onclick' => "navigator.clipboard.writeText('$link')"
-        //             ]),
-        //     ])
-        //     ->send();
+        $this->record->condominiums()->sync($ids);
     }
 }

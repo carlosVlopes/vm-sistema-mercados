@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ClientResource extends Resource
 {
@@ -62,4 +64,34 @@ class ClientResource extends Resource
             'edit' => EditClient::route('/{record}/edit'),
         ];
     }
+
+    public static function get_condominiums(?int $clientId = null): array
+    {
+        $apiData = Cache::remember('vm_clients_api', 600, function () {
+
+            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
+                'access_token' => env('VM_API_TOKEN'),
+            ]);
+
+            return $response->json();
+        });
+
+        $query = \DB::table('clients_condominiums');
+
+        if ($clientId) {
+            $query->where('client_id', '!=', $clientId);
+        }
+
+        $usedIds = $query
+            ->pluck('condominium_id')
+            ->toArray();
+
+        return collect($apiData)
+            ->reject(fn ($item) => in_array($item['id'], $usedIds))
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+
+
+
 }

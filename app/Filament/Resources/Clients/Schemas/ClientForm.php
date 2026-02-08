@@ -5,8 +5,9 @@ namespace App\Filament\Resources\Clients\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use App\Models\Client;
 use Filament\Forms\Components\Select;
+use App\Filament\Resources\Clients\ClientResource;
+use App\Models\Client;
 
 class ClientForm
 {
@@ -21,7 +22,20 @@ class ClientForm
                     ->maxLength(255),
                 Select::make('condominiuns_ids')
                     ->label('Condomínios')
-                    ->options(fn() => Client::get_condominiums())
+                    ->options(function ($livewire) {
+                        $clientId = $livewire->record?->id;
+
+                        return ClientResource::get_condominiums($clientId);
+                    })
+                    ->loadStateFromRelationshipsUsing(function ($record, $set) {
+
+                        $ids = \DB::table('clients_condominiums')
+                            ->where('client_id', $record->id)
+                            ->pluck('condominium_id')
+                            ->toArray();
+
+                        $set('condominiuns_ids', $ids);
+                    })
                     ->multiple()
                     ->searchable(),
                 // Telefone
