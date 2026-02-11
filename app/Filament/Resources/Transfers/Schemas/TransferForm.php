@@ -12,6 +12,12 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Icon;
+use Filament\Support\Icons\Heroicon;
+use Filament\Schemas\Components\Text;
+use Filament\Support\Enums\FontWeight;
 
 class TransferForm
 {
@@ -22,7 +28,7 @@ class TransferForm
                 Wizard::make([
                     Step::make('Calcular')
                         ->afterValidation(function($get, $set) {
-                            $sales = TransferResource::fetch_sales($get);
+                            // $sales = TransferResource::fetch_sales($get);
                         })
                         ->schema([
                             Grid::make(2)
@@ -40,6 +46,8 @@ class TransferForm
                                         ->options(function (callable $get) {
 
                                             $clientId = $get('client_id');
+
+                                            logger()->info('Buscando condomínios para client_id: ' . $clientId);
 
                                             if (! $clientId) {
                                                 return [];
@@ -73,9 +81,73 @@ class TransferForm
                                     
                                 ]),
                         ]),
-                    Step::make('Vendas')
+                    Step::make('Resumo Financeiro')
                         ->schema([
-                            
+                            Section::make('Resumo Financeiro')
+                                ->icon(Icon::make(Heroicon::ChartBar))
+                                ->description('Visão geral dos valores')
+                                ->schema([
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | Cards Superiores
+                                    |--------------------------------------------------------------------------
+                                    */
+                                    Grid::make(3)
+                                        ->schema([
+
+                                            // Total Bruto
+                                            TextInput::make('total_bruto')
+                                                ->label('Total Bruto')
+                                                ->prefix('R$')
+                                                ->disabled()
+                                                ->default('12.450,00')
+                                                ->beforeLabel(Icon::make(Heroicon::Banknotes)),
+                                                // ->belowLabel('heroicon-o-banknotes'),
+
+                                            // Taxa
+                                            TextInput::make('taxa')
+                                                ->label('Taxa da Máquina')
+                                                ->afterLabel(Text::make(auth()->user()->machine_fee . '%')->badge())
+                                                ->prefix('-')
+                                                ->disabled()
+                                                ->default('820,00')
+                                                ->beforeLabel(Icon::make(Heroicon::CreditCard)),
+
+                                            // Impostos
+                                            TextInput::make('impostos')
+                                                ->label('Impostos')
+                                                ->afterLabel(Text::make(auth()->user()->taxes_fee . '%')->badge())
+                                                ->prefix('-')
+                                                ->disabled()
+                                                ->default('1.100,00')
+                                                ->beforeLabel(Icon::make(Heroicon::ReceiptPercent)),
+                                        ]),
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | Destaque Principal
+                                    |--------------------------------------------------------------------------
+                                    */
+                                    Grid::make(3)
+                                        ->schema([
+
+                                            TextInput::make('total_liquido')
+                                                ->label('Total Líquido')
+                                                ->prefix('R$')
+                                                ->disabled()
+                                                ->default('10.530,00'),
+                                            TextInput::make('comissao')
+                                                ->label('Valor do Repasse (20%)')
+                                                ->afterLabel(Text::make('Valor que será repassado ao cliente, calculado sobre o total líquido.')->badge())
+                                                ->prefix('R$')
+                                                ->default('2.106,00')
+                                                ->columnSpan(2)
+                                                ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp)),
+                                        ]),
+
+
+                                ])
                         ]),
                 ])->columnSpanFull()
             ]);

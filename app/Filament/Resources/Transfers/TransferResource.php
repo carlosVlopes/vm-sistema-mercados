@@ -94,23 +94,33 @@ class TransferResource extends Resource
 
         logger()->info('Buscando vendas para cliente_id: ' . $clientId . ', condominium_id: ' . $condominiumId . ', period_start: ' . $periodStart . ', period_end: ' . $periodEnd);
 
-        $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/vends', [
-            'access_token' => env('VM_API_TOKEN'),
-            'client_id' => $condominiumId,
-            'start_date' => $periodStart,
-            'end_date' => $periodEnd,
-            'per_page' => 1000
-        ]);
+        $total = 0;
+        $page = 1;
 
-        if($response->failed()) {
-            logger()->error('Erro ao buscar vendas: ' . $response->body());
-            return [];
-        }
+        do {
 
-        $sales = json_decode($response->body(), true);
+            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/vends', [
+                'access_token' => env('VM_API_TOKEN'),
+                'client_id'    => $condominiumId,
+                'start_date'   => $periodStart,
+                'end_date'     => $periodEnd,
+                'per_page'     => 1000,
+                'page'         => $page,
+            ]);
 
-        logger()->info($sales);
+            $sales = $response->json();
 
-        return json_decode($response->body(), true) ?? [];
+            foreach ($sales as $sale) {
+                $total += floatval($sale['value']);
+            }
+
+            $hasMore = count($sales) === 1000;
+            $page++;
+
+        } while ($hasMore);
+
+        logger()->info("Total de vendas: $total");
+
+        return $total;
     }
 }
