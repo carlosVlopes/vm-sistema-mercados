@@ -25,13 +25,13 @@ class ClientResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Clientes';
+    protected static ?string $navigationLabel = 'Síndicos';
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'cliente';
+    protected static ?string $recordTitleAttribute = 'síndico';
 
-    protected static ?string $modelLabel = 'cliente'; // texto do botao/inserir/edita
+    protected static ?string $modelLabel = 'síndico'; // texto do botao/inserir/edita
 
     public static function form(Schema $schema): Schema
     {

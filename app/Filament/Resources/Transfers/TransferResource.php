@@ -15,6 +15,12 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Brick\Money\Money;
+use Brick\Money\Currency;
+use Brick\Math\RoundingMode;
+use Brick\Money\Formatter\MoneyNumberFormatter;
+use NumberFormatter;
+
 
 class TransferResource extends Resource
 {
@@ -92,9 +98,7 @@ class TransferResource extends Resource
             return [];
         }
 
-        logger()->info('Buscando vendas para cliente_id: ' . $clientId . ', condominium_id: ' . $condominiumId . ', period_start: ' . $periodStart . ', period_end: ' . $periodEnd);
-
-        $total = 0;
+        $sales_value = 0;
         $page = 1;
 
         do {
@@ -111,7 +115,7 @@ class TransferResource extends Resource
             $sales = $response->json();
 
             foreach ($sales as $sale) {
-                $total += floatval($sale['value']);
+                $sales_value += floatval($sale['value']);
             }
 
             $hasMore = count($sales) === 1000;
@@ -119,8 +123,37 @@ class TransferResource extends Resource
 
         } while ($hasMore);
 
-        logger()->info("Total de vendas: $total");
+        $sales = Money::of($sales_value, 'BRL');
 
-        return $total;
+        $machineFee = $sales
+            ->multipliedBy(auth()->user()->machine_fee)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $taxesFee = $sales
+            ->multipliedBy(auth()->user()->taxes_fee)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $subtotal = $sales
+            ->minus($machineFee)
+            ->minus($taxesFee);
+
+        $netValue = $subtotal->multipliedBy('0.2', RoundingMode::HALF_UP);
+
+        \Log::info('Sales Value: ' . $sales->getAmount());
+        \Log::info('Machine Fee: ' . $machineFee->getAmount());
+        \Log::info('Taxes Fee: ' . $taxesFee->getAmount());
+        \Log::info('Subtotal: ' . $subtotal->getAmount());
+        \Log::info('Net Value: ' . $netValue->getAmount());
+
+        $numberFormatter = new NumberFormatter('pt_BR', NumberFormatter::DECIMAL);
+        $formatter = new MoneyNumberFormatter($numberFormatter);
+
+        return [
+            'sales_value' => $formatter->format($sales),
+            'machine_fee' => $formatter->format($machineFee),
+            'taxes_fee'   => $formatter->format($taxesFee),
+            'subtotal'    => $formatter->format($subtotal),
+            'net_value'   => $formatter->format($netValue),
+        ];
     }
 }
