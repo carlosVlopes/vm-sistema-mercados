@@ -5,8 +5,6 @@ namespace App\Filament\Resources\Clients\Pages;
 use App\Filament\Resources\Clients\ClientResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
-use Filament\Notifications\Notification;
-use Filament\Actions\Action;
 
 class CreateClient extends CreateRecord
 {
@@ -23,7 +21,7 @@ class CreateClient extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $ids = $this->data['condominiuns_ids'] ?? [];
+        $ids = $this->data['condominiums_ids'] ?? [];
 
         $this->record->condominiums()->sync($ids);
     }

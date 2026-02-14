@@ -16,17 +16,17 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Brick\Money\Money;
-use Brick\Money\Currency;
 use Brick\Math\RoundingMode;
 use Brick\Money\Formatter\MoneyNumberFormatter;
 use NumberFormatter;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class TransferResource extends Resource
 {
     protected static ?string $model = Transfer::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Banknotes;
 
     protected static ?string $navigationLabel = 'Repasses';
 
@@ -44,6 +44,12 @@ class TransferResource extends Resource
     public static function table(Table $table): Table
     {
         return TransfersTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
     }
 
     public static function getRelations(): array
@@ -87,6 +93,19 @@ class TransferResource extends Resource
             ->toArray();
     }
 
+    public static function get_condominium_name(int $condominium_id)
+    {
+        $apiData = Cache::remember('vm_condominium_' . $condominium_id . '_api', 600, function () use ($condominium_id) {
+            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominium_id, [
+                'access_token' => env('VM_API_TOKEN'),
+            ]);
+
+            return $response->json();
+        });
+
+        return $apiData['name'] ?? '';
+    } 
+
     public static function fetch_sales($get)
     {
         $clientId = $get('client_id');
@@ -98,8 +117,11 @@ class TransferResource extends Resource
             return [];
         }
 
+        $client = \App\Models\Client::find($clientId);
+
         $sales_value = 0;
         $page = 1;
+        $condominium_name = '';
 
         do {
 
@@ -114,6 +136,8 @@ class TransferResource extends Resource
 
             $sales = $response->json();
 
+            $condominium_name = $sales[0]['client']['name'] ?? '';
+
             foreach ($sales as $sale) {
                 $sales_value += floatval($sale['value']);
             }
@@ -126,18 +150,18 @@ class TransferResource extends Resource
         $sales = Money::of($sales_value, 'BRL');
 
         $machineFee = $sales
-            ->multipliedBy(auth()->user()->machine_fee)
+            ->multipliedBy(auth()->user()->machine_fee, RoundingMode::HALF_UP)
             ->dividedBy(100, RoundingMode::HALF_UP);
 
         $taxesFee = $sales
-            ->multipliedBy(auth()->user()->taxes_fee)
+            ->multipliedBy(auth()->user()->taxes_fee, RoundingMode::HALF_UP)
             ->dividedBy(100, RoundingMode::HALF_UP);
 
         $subtotal = $sales
             ->minus($machineFee)
             ->minus($taxesFee);
 
-        $netValue = $subtotal->multipliedBy('0.2', RoundingMode::HALF_UP);
+        $netValue = $subtotal->multipliedBy(($client?->percentage / 100), RoundingMode::HALF_UP);
 
         \Log::info('Sales Value: ' . $sales->getAmount());
         \Log::info('Machine Fee: ' . $machineFee->getAmount());
@@ -149,11 +173,15 @@ class TransferResource extends Resource
         $formatter = new MoneyNumberFormatter($numberFormatter);
 
         return [
-            'sales_value' => $formatter->format($sales),
+            'gross_total' => $formatter->format($sales),
             'machine_fee' => $formatter->format($machineFee),
             'taxes_fee'   => $formatter->format($taxesFee),
-            'subtotal'    => $formatter->format($subtotal),
-            'net_value'   => $formatter->format($netValue),
+            'net_total'    => $formatter->format($subtotal),
+            'transfer_value'   => $formatter->format($netValue),
+            'condominium_name' => $condominium_name,
+            'client_name' => $client?->name,
+            'client_email' => $client?->email,
+            'client_percentage' => $client?->percentage
         ];
     }
 }

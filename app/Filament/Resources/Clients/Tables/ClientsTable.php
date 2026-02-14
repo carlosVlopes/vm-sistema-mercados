@@ -8,10 +8,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\TernaryFilter;
 
@@ -68,6 +66,7 @@ class ClientsTable
             ->recordActions([
                 Action::make('Repasses')
                     ->button()
+                    ->color('info')
                     ->url('teste'),
                 EditAction::make()
                     ->button(),

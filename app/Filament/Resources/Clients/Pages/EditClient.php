@@ -19,9 +19,9 @@ class EditClient extends EditRecord
 
     protected function afterSave(): void
     {
-        $ids = $this->data['condominiuns_ids'] ?? [];
+        dd($this->data);
 
-        dd($ids);
+        $ids = $this->data['condominiums_ids'] ?? [];
 
         $this->record
             ->condominiums()

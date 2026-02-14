@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Clients\Schemas;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Select;
 use App\Filament\Resources\Clients\ClientResource;
 use App\Models\Client;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Schema;
 
 class ClientForm
 {
@@ -20,7 +20,7 @@ class ClientForm
                     ->label('Nome')
                     ->required()
                     ->maxLength(255),
-                Select::make('condominiuns_ids')
+                Select::make('condominiums_ids')
                     ->label('Condomínios')
                     ->options(function ($livewire) {
                         $clientId = $livewire->record?->id;
@@ -34,7 +34,8 @@ class ClientForm
                             ->pluck('condominium_id')
                             ->toArray();
 
-                        $set('condominiuns_ids', $ids);
+                        $set('condominiums_ids', $ids);
+                        $set('condominiums_ids', $ids);
                     })
                     ->multiple()
                     ->searchable(),
