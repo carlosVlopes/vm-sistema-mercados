@@ -10,6 +10,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Http;
 
 class SetupAccount extends Page implements HasForms
 {
@@ -62,7 +63,7 @@ class SetupAccount extends Page implements HasForms
                             ]),
                         TextInput::make('api_token')
                             ->label('Token da API')
-                            ->required(),
+                            ->required()
                     ])
             ]);
     }
@@ -71,6 +72,20 @@ class SetupAccount extends Page implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
+
+        $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
+            'access_token' => $data['api_token'],
+        ]);
+
+        if($response->status() != 200)
+        {
+            Notification::make()
+                ->danger()
+                ->title('Não conseguimos validar esse token, por favor verifique o token e tente novamente!')
+                ->send();
+
+            return;
+        }
 
         $user = auth()->user();
 

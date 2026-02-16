@@ -29,7 +29,6 @@ class TransfersTable
                     ->label('Período')
                     ->date()
                     ->dateTime('d/m/Y')
-                    ->width('250px')
                     ->formatStateUsing(function($state, $record){
                         $start = date('d/m/Y', strtotime($record->period_start));
                         $end = date('d/m/Y', strtotime($record->period_end));
@@ -39,7 +38,6 @@ class TransfersTable
                 TextColumn::make('client.name')
                     ->label('Cliente')
                     ->searchable()
-                    ->width('25%')
                     ->sortable(),
                 TextColumn::make('condominium_id')
                     ->label('Condomínio')
@@ -50,7 +48,6 @@ class TransfersTable
                     ->sortable(),
                 TextColumn::make('transfer_value')
                     ->label('Valor do repasse')
-                    ->width('200px')
                     ->formatStateUsing(function($state){
                         return Money::ofMinor($state, 'BRL')->formatTo('pt_BR');
                     })

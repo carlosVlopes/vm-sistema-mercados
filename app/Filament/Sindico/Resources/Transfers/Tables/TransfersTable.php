@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Brick\Money\Money;
+use Filament\Actions\ViewAction;
 
 class TransfersTable
 {
@@ -49,12 +50,11 @@ class TransfersTable
                 //
             ])
             ->recordActions([
-                Action::make('view')
-                    ->label('Visualizar')
-                    ->url('teste')
-                    ->button()
-                    ->icon('heroicon-o-eye'),
+                ViewAction::make()
+                    ->button(),
             ])
-            ->toolbarActions([]);
+            ->toolbarActions([])
+            ->headerActions([]);
+
     }
 }

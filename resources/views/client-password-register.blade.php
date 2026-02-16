@@ -113,7 +113,7 @@
 <body>
     <div class="card-custom">
         <div class="brand-title">VM - Sistema de Mercados</div>
-        <div class="page-title">Olá, sindico 2</div>
+        <div class="page-title">Olá, {{ $user->name }}</div>
         <p class="info-text">Para acessar o sistema, por favor, defina sua senha.</p>
         <form action="{{ route('registrar-senha.store', ['token' => $token]) }}" method="POST">
             @csrf

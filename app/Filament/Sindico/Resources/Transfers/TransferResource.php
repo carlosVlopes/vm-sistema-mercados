@@ -3,6 +3,7 @@
 namespace App\Filament\Sindico\Resources\Transfers;
 
 use App\Filament\Sindico\Resources\Transfers\Pages\ListTransfers;
+use App\Filament\Sindico\Resources\Transfers\Pages\ViewTransfer;
 use App\Filament\Sindico\Resources\Transfers\Tables\TransfersTable;
 use App\Models\Sindico\Transfer;
 use App\Models\User;
@@ -28,11 +29,6 @@ class TransferResource extends Resource
 
     protected static ?string $modelLabel = 'repasse'; // texto do botao/inserir/edita
 
-    protected function getHeaderActions(): array
-    {
-        return []; // remove botão create
-    }
-
     public static function table(Table $table): Table
     {
         return TransfersTable::configure($table);
@@ -47,7 +43,8 @@ class TransferResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListTransfers::route('/')
+            'index' => ListTransfers::route('/'),
+            'view' => ViewTransfer::route('/{record}'),
         ];
     }
 

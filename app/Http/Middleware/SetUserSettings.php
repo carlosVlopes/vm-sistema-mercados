@@ -21,11 +21,6 @@ class SetUserSettings
             return $next($request);
         }
 
-        $needsSetup =
-            !$user->machine_fee ||
-            !$user->taxes_fee ||
-            !$user->api_token;
-
         // evita loop
         if ($user && !$user->isConfigured() && !$request->routeIs('filament.painel.pages.setup-account')) 
         {

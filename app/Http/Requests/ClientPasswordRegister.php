@@ -23,8 +23,8 @@ class ClientPasswordRegister extends FormRequest
     {
         return [
             'token' => 'required',
-            'password' => 'required|min:8',
-            'password_confirm' => 'required|min:8|same:password',
+            'password' => 'required|min:6',
+            'password_confirm' => 'required|min:6|same:password',
         ];
     }
 
@@ -32,9 +32,9 @@ class ClientPasswordRegister extends FormRequest
     {
         return [
             'password.required' => 'A senha é obrigatória.',
-            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'password.min' => 'A senha deve ter no mínimo 6 caracteres.',
             'password_confirm.required' => 'A confirmação de senha é obrigatória.',
-            'password_confirm.min' => 'A confirmação de senha deve ter no mínimo 8 caracteres.',
+            'password_confirm.min' => 'A confirmação de senha deve ter no mínimo 6 caracteres.',
             'password_confirm.same' => 'A confirmação de senha deve ser igual à senha.',
         ];
     }

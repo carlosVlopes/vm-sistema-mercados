@@ -15,6 +15,7 @@ class Client extends Authenticatable implements FilamentUser
         'email',
         'percentage',
         'receives_light',
+        'register_token'
     ];
 
     public function condominiums()
