@@ -17,6 +17,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class SindicoPanelProvider extends PanelProvider
@@ -26,6 +27,7 @@ class SindicoPanelProvider extends PanelProvider
         return $panel
             ->id('sindico')
             ->path('sindico')
+            ->authGuard('client')
             ->login()
             ->profile()
             ->colors([

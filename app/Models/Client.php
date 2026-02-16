@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 
-class Client extends Model
+class Client extends Authenticatable implements FilamentUser
 {
     protected $fillable = [
         'name',
@@ -37,5 +39,10 @@ class Client extends Model
                 $client->user_id = Auth::id();
             }
         });
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $panel->getId() === 'sindico';
     }
 }

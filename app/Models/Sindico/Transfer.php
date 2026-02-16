@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sindico;
 
+use App\Models\Client;
+use App\Models\Condominium;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 
 class Transfer extends Model
 {
@@ -21,6 +23,11 @@ class Transfer extends Model
         'user_id'
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);
@@ -29,14 +36,5 @@ class Transfer extends Model
     public function condominium()
     {
         return $this->belongsTo(Condominium::class);
-    }
-
-    protected static function booted()
-    {
-        static::creating(function ($transfer) {
-            if (Auth::check()) {
-                $transfer->user_id = Auth::id();
-            }
-        });
     }
 }

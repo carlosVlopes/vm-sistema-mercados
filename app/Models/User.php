@@ -47,6 +47,13 @@ class User extends Authenticatable
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $panel->getId() === 'painel';
+    }
+
+    public function isConfigured(): bool
+    {
+        return filled($this->machine_fee)
+            && filled($this->taxes_fee)
+            && filled($this->api_token);
     }
 }

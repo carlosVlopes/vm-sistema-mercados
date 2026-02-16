@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class SetUserSettings
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $next($request);
+        }
+
+        $needsSetup =
+            !$user->machine_fee ||
+            !$user->taxes_fee ||
+            !$user->api_token;
+
+        // evita loop
+        if ($user && !$user->isConfigured() && !$request->routeIs('filament.painel.pages.setup-account')) 
+        {
+            return redirect()->route('filament.painel.pages.setup-account');
+        }
+
+        return $next($request);
+    }
+}

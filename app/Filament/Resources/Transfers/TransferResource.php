@@ -73,7 +73,7 @@ class TransferResource extends Resource
         $apiData = Cache::remember('vm_clients_api', 600, function () {
 
             $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
-                'access_token' => env('VM_API_TOKEN'),
+                'access_token' => auth()->user()->api_token,
             ]);
 
             return $response->json();
@@ -97,7 +97,7 @@ class TransferResource extends Resource
     {
         $apiData = Cache::remember('vm_condominium_' . $condominium_id . '_api', 600, function () use ($condominium_id) {
             $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominium_id, [
-                'access_token' => env('VM_API_TOKEN'),
+                'access_token' => auth()->user()->api_token,
             ]);
 
             return $response->json();
@@ -125,8 +125,8 @@ class TransferResource extends Resource
 
         do {
 
-            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/vends', [
-                'access_token' => env('VM_API_TOKEN'),
+            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/cashless_sales', [
+                'access_token' => auth()->user()->api_token,
                 'client_id'    => $condominiumId,
                 'start_date'   => $periodStart,
                 'end_date'     => $periodEnd,

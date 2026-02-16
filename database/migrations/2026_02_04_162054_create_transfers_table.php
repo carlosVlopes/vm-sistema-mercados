@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('transfers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('condominium_id')->constrained('condominiums')->cascadeOnDelete();
+            $table->foreignId('condominium_id')->constrained('clients_condominiums')->cascadeOnDelete();
             $table->timestamp('date')->useCurrent()->index();
             $table->timestamp('period_start')->nullable()->index();
             $table->timestamp('period_end')->nullable()->index();

@@ -67,7 +67,7 @@ class ClientResource extends Resource
         $apiData = Cache::remember('vm_clients_api', 600, function () {
 
             $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
-                'access_token' => env('VM_API_TOKEN'),
+                'access_token' => auth()->user()->api_token,
             ]);
 
             return $response->json();
@@ -88,7 +88,5 @@ class ClientResource extends Resource
             ->pluck('name', 'id')
             ->toArray();
     }
-
-
 
 }
