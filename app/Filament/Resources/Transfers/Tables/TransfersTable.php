@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Transfers\Tables;
 
-use App\Filament\Resources\Transfers\TransferResource;
 use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -10,6 +9,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -39,20 +40,18 @@ class TransfersTable
                     ->label('Cliente')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('condominium_id')
+                TextColumn::make('condominium_name')
                     ->label('Condomínio')
                     ->searchable()
-                    ->formatStateUsing(function($state){
-                        return TransferResource::get_condominium_name($state);
-                    })
                     ->sortable(),
                 TextColumn::make('transfer_value')
                     ->label('Valor do repasse')
+                    ->weight(FontWeight::Medium)
+                    ->size(TextSize::Medium)
                     ->formatStateUsing(function($state){
                         return Money::ofMinor($state, 'BRL')->formatTo('pt_BR');
                     })
                     ->sortable(),
-
             ])
             ->filters([
                 //

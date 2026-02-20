@@ -9,7 +9,7 @@ class Transfer extends Model
 {
     protected $fillable = [
         'client_id',
-        'condominium_id',
+        'condominium_name',
         'date',
         'period_start',
         'period_end',

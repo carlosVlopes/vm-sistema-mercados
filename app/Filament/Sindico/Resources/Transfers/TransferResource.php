@@ -47,17 +47,4 @@ class TransferResource extends Resource
             'view' => ViewTransfer::route('/{record}'),
         ];
     }
-
-    public static function get_condominium_name(int $condominium_id)
-    {
-        $apiData = Cache::remember('vm_condominium_' . $condominium_id . '_api', 600, function () use ($condominium_id) {
-            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominium_id, [
-                'access_token' => User::find(auth()->user()->user_id)->api_token,
-            ]);
-
-            return $response->json();
-        });
-
-        return $apiData['name'] ?? '';
-    }
 }

@@ -83,6 +83,7 @@ class TransferForm
     public static function getDetailsStep() : array
     {
         return [
+            Hidden::make('condominium_name'),
             Section::make('Dados do Síndico')
                 ->icon(Icon::make(Heroicon::BuildingStorefront))
                 ->description('Dados do síndico selecionado')
@@ -161,10 +162,14 @@ class TransferForm
                         ->schema([
                             FileUpload::make('proof_payment')
                                 ->label('Comprovante de transferência')
-                                ->acceptedFileTypes(['application/pdf', 'application/image/jpeg', 'application/image/png']),
+                                ->acceptedFileTypes(['application/pdf', 'application/image/jpeg', 'application/image/png'])
+                                ->disk('public')
+                                ->visibility('public'),
                             FileUpload::make('proof_light')
                                 ->label('Comprovante de luz')
                                 ->acceptedFileTypes(['application/pdf', 'application/image/jpeg', 'application/image/png'])
+                                ->disk('public')
+                                ->visibility('public')
                         ]),
                 ])
             ];

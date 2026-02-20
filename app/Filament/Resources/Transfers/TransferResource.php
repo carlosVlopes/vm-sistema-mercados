@@ -93,19 +93,6 @@ class TransferResource extends Resource
             ->toArray();
     }
 
-    public static function get_condominium_name(int $condominium_id)
-    {
-        $apiData = Cache::remember('vm_condominium_' . $condominium_id . '_api', 600, function () use ($condominium_id) {
-            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominium_id, [
-                'access_token' => auth()->user()->api_token,
-            ]);
-
-            return $response->json();
-        });
-
-        return $apiData['name'] ?? '';
-    } 
-
     public static function fetch_sales($get)
     {
         $clientId = $get('client_id');

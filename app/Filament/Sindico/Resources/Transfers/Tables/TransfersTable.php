@@ -2,12 +2,12 @@
 
 namespace App\Filament\Sindico\Resources\Transfers\Tables;
 
-use App\Filament\Sindico\Resources\Transfers\TransferResource;
-use Filament\Actions\Action;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Brick\Money\Money;
 use Filament\Actions\ViewAction;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class TransfersTable
 {
@@ -31,16 +31,14 @@ class TransfersTable
                         return "{$start} - {$end}";
                     })
                     ->sortable(),
-                TextColumn::make('condominium_id')
+                TextColumn::make('condominium_name')
                     ->label('Condomínio')
                     ->searchable()
-                    ->formatStateUsing(function($state){
-                        return TransferResource::get_condominium_name($state);
-                    })
                     ->sortable(),
                 TextColumn::make('transfer_value')
                     ->label('Valor do repasse')
-                    ->width('200px')
+                    ->weight(FontWeight::Medium)
+                    ->size(TextSize::Medium)
                     ->formatStateUsing(function($state){
                         return Money::ofMinor($state, 'BRL')->formatTo('pt_BR');
                     })

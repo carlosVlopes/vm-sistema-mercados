@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
 use Illuminate\Support\Facades\Storage;
+use Filament\Support\Enums\MaxWidth;
 
 class ViewTransfer extends ViewRecord
 {
@@ -56,56 +57,50 @@ class ViewTransfer extends ViewRecord
                         Group::make([
                             Section::make('Resumo Financeiro')
                                 ->schema([
-                                    Grid::make(2)
+                                    Grid::make(4)
                                         ->schema([
-                                            TextEntry::make('transfer_value')
+                                                TextEntry::make('transfer_value')
                                                 ->label('Valor do Repasse')
                                                 ->money('BRL', divideBy: 100)
                                                 ->weight(FontWeight::Black)
                                                 ->size(TextSize::Large)
-                                                ->icon('heroicon-m-currency-dollar')
                                                 ->color('success'),
-                                            TextEntry::make('light_value')
-                                                ->label('Valor conta de luz')
-                                                ->money('BRL', divideBy: 100)
-                                                ->weight(FontWeight::Black)
-                                                ->size(TextSize::Large)
-                                                ->icon('heroicon-m-bolt')
-                                                ->visible(fn ($record) => auth()->user()->receives_light)
-                                                ->color('warning'),
                                         ]),
-                                    Actions::make([
-                                        Action::make('view_payment')
-                                            ->label('Ver Comprovante')
-                                            ->icon('heroicon-m-arrow-top-right-on-square')
-                                            ->color('primary')
-                                            ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
-                                            ->openUrlInNewTab()
-                                            ->disabled(fn ($record) => !$record->proof_payment),
-
-                                        Action::make('view_light')
-                                            ->label('Ver Conta de Luz')
+                                        TextEntry::make('light_value')
+                                            ->label('Valor conta de luz')
+                                            ->money('BRL', divideBy: 100)
                                             ->icon('heroicon-m-bolt')
-                                            ->color('warning')
-                                            ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
-                                            ->openUrlInNewTab()
-                                            ->visible(fn ($record) => $record->proof_light),
-                                    ])
-                                    ->extraAttributes(['style' => 'margin-top: 3.2rem !important; display: flex;'])
-                                    ->label('Comprovantes')
-                                    ->columnSpan(1),
+                                            ->visible(fn ($record) => $record->proof_light)
+                                            ->color('warning'),
+                                        Actions::make([
+                                            Action::make('view_payment')
+                                                ->label('Ver Comprovante')
+                                                ->icon('heroicon-m-arrow-top-right-on-square')
+                                                ->color('primary')
+                                                ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
+                                                ->openUrlInNewTab()
+                                                ->disabled(fn ($record) => !$record->proof_payment),
+
+                                            Action::make('view_light')
+                                                ->label('Ver Conta de Luz')
+                                                ->icon('heroicon-m-bolt')
+                                                ->color('warning')
+                                                ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
+                                                ->openUrlInNewTab()
+                                                ->visible(fn ($record) => $record->proof_light),
+                                        ])
+                                        ->columnSpan(1),
                                 ]),
                             ])->columnSpan(2),
-                        Section::make('Observações')
-                            ->schema([
-                                Grid::make(3)
-                                    ->schema([
-                                        TextEntry::make('notes')
-                                            ->hiddenLabel()
-                                            ->placeholder('Sem observações cadastradas.')
-                                            ->columnSpan(2),
-                                    ]),
-                            ])->columnSpanFull(),
+                            Section::make('Observações')
+                                ->schema([
+                                    Grid::make(3)
+                                        ->schema([
+                                            TextEntry::make('notes')
+                                                ->placeholder('Sem observações cadastradas.')
+                                                ->columnSpan(2),
+                                        ]),
+                                ])->columnSpanFull(),
                     ])->columnSpanFull()
             ]);
     }

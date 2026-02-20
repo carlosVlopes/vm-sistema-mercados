@@ -36,6 +36,7 @@ class CreateTransfer extends CreateRecord
                     $set('disabled_percentage', $info['client_percentage'] ?? 0);
                     $set('disabled_period', date('d/m/Y', strtotime($get('period_start'))) . ' - ' . date('d/m/Y', strtotime($get('period_end'))));
                     $set('disabled_condominium', $info['condominium_name']);
+                    $set('condominium_name', $info['condominium_name']);
                 })
                 ->schema([
                     Section::make()
@@ -52,6 +53,8 @@ class CreateTransfer extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        unset($data['condominium_id']);
+
         $normalized_transfer_value = str_replace('.', '', $data['transfer_value']);
         $normalized_transfer_value = str_replace(',', '.', $normalized_transfer_value);
 
