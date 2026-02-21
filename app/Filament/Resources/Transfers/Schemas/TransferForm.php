@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Forms\Components\Placeholder;
 
 class TransferForm
 {
@@ -29,6 +30,8 @@ class TransferForm
         return [
             Grid::make(2)
                 ->schema([
+                    Hidden::make('calc_finished')->default(false),
+                    Hidden::make('calc_id'),
                     Hidden::make('user_id')
                         ->default(fn () => auth()->id()),
                     Select::make('client_id')
@@ -64,6 +67,7 @@ class TransferForm
                 ]),
             Grid::make(2)
                 ->schema([
+                    Hidden::make('finished')->default(false),
                     DatePicker::make('period_start')
                         ->native(false)
                         ->label('Início das vendas')
@@ -76,7 +80,28 @@ class TransferForm
                         ->displayFormat('d/m/Y')
                         ->after('period_start')
                         ->required(),
-                    
+                    Placeholder::make('progress')
+                        ->label('Processando vendas')
+                        ->content(function ($get, $livewire) {
+                            $calc = \App\Models\Calculation::find($get('calc_id'));
+
+                            if (!$calc) {
+                                return 'Iniciando...';
+                            }
+
+                            if ($calc->status === 'done' && !$get('calc_finished')) {
+                                // marca como terminado para não disparar várias vezes
+                                $livewire->form->fill(['calc_finished' => true]);
+
+                                // dispara evento para avançar o wizard
+                                $livewire->dispatch('next-wizard-step');
+
+                                return '✅ Finalizado';
+                            }
+
+                            return "🔄 Processando... {$calc->progress}%";
+                        })
+                        ->poll('2s'),
                 ]),
         ];
     }

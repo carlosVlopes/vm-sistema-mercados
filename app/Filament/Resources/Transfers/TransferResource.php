@@ -107,16 +107,28 @@ class TransferResource extends Resource
 
         $client = \App\Models\Client::find($clientId);
 
+        $period = CarbonPeriod::create(
+            Carbon::parse($periodStart)->startOfDay(),
+            Carbon::parse($periodEnd)->endOfDay()
+        );
+
+        $periodStartCarbon = Carbon::parse($periodStart)->startOfDay();
+        $periodEndCarbon   = Carbon::parse($periodEnd)->endOfDay();
+
+        $totalDays = $periodStartCarbon->diffInDays($periodEndCarbon) + 1;
+
         $calc = Calculation::create([
             'period_start' => $periodStart,
             'period_end' => $periodEnd,
             'status' => 'pending',
-            'progress' => 0
+            'progress' => 0,
+            'total_days'   => $totalDays,
+            'processed_days' => 0,
         ]);
 
         $period = CarbonPeriod::create(
-            Carbon::parse($periodStart)->startOfDay(),
-            Carbon::parse($periodEnd)->endOfDay()
+            $periodStartCarbon,
+            $periodEndCarbon
         );
 
         foreach ($period as $date) {
@@ -127,10 +139,10 @@ class TransferResource extends Resource
                 api_token: auth()->user()->api_token,
                 user_id: auth()->id(),
                 page: 1,
-                day: $date->toDateString() // ⭐ chave da divisão
+                day: $date->toDateString()
             );
         }
 
-        return $calc->id;
+        return $calc;
     }
 }

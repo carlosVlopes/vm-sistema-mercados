@@ -72,7 +72,20 @@ class SyncSalesJob implements ShouldQueue
 
             \Log::info('Total atualizado: ' . $calc->fresh()->total);
 
-            $calc->update([ 'status' => 'done', 'progress' => 100]); 
+            $calc->increment('processed_days');
+
+            $calc->refresh();
+
+            if ($calc->total_days > 0) {
+                $progress = intval(($calc->processed_days / $calc->total_days) * 100);
+            } else {
+                $progress = 0;
+            }
+
+            $calc->update([
+                'progress' => $progress,
+                'status' => $progress >= 100 ? 'done' : 'processing',
+            ]);
 
             return; 
         }
@@ -81,8 +94,8 @@ class SyncSalesJob implements ShouldQueue
 
         SyncSalesJob::dispatch(
             $calc->id,
-            $this->clientId,
-            $this->condominiumId,
+            $this->client_id,
+            $this->condominium_id,
             $this->api_token,
             $nextPage,
             $this->day

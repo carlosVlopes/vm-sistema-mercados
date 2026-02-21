@@ -8,7 +8,7 @@ use Brick\Money\Money;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard\Step;
-
+use Illuminate\Validation\ValidationException;
 
 class CreateTransfer extends CreateRecord
 {
@@ -16,12 +16,34 @@ class CreateTransfer extends CreateRecord
 
     use CreateRecord\Concerns\HasWizard;
 
+    protected $listeners = [
+        'next-wizard-step' => 'goToNextStep',
+    ];
+
+    public function goToNextStep()
+    {
+        $this->dispatch('wizard::nextStep');
+    }
+
     protected function getSteps(): array
     {
         return [
             Step::make('Informações Básicas')
                 ->afterValidation(function($get, $set) {
-                    $info = TransferResource::fetch_sales($get);
+                    $calc = TransferResource::fetch_sales($get);
+
+                    $set('calc_id', $calc->id);     
+
+                    if ($calc?->status !== 'done') {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Processando vendas...')
+                            ->warning()
+                            ->send();
+
+                        throw ValidationException::withMessages([
+                            'calc_id' => ' ',
+                        ]);
+                    }
 
                     // $set('gross_total', $info['gross_total']);
                     // $set('gross_total_disabled', $info['gross_total']);
@@ -44,6 +66,9 @@ class CreateTransfer extends CreateRecord
                 ]),
 
             Step::make('Resumo Financeiro')
+                ->disabled(fn ($get) =>
+                    optional(\App\Models\Calculation::find($get('calc_id')))->status !== 'done'
+                )
                 ->schema([
                     Section::make()
                         ->schema(TransferForm::getDetailsStep()),

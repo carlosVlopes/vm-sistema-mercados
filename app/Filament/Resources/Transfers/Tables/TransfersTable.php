@@ -71,8 +71,8 @@ class TransfersTable
                         DatePicker::make('period_end')
                             ->label('Fim das vendas'),
                     ])
-                    ->columns(4) 
-                    ->columnSpan(4)
+                    ->columns(3) 
+                    ->columnSpan(3)
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
