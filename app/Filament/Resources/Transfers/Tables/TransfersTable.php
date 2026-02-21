@@ -9,10 +9,17 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class TransfersTable
 {
@@ -54,16 +61,50 @@ class TransfersTable
                     ->sortable(),
             ])
             ->filters([
-                //
-            ])
+                SelectFilter::make('client')
+                    ->label('Cliente')
+                    ->relationship('client', 'name'),
+                Filter::make('period')
+                    ->form([
+                        DatePicker::make('period_start')
+                            ->label('Início das vendas'),
+                        DatePicker::make('period_end')
+                            ->label('Fim das vendas'),
+                    ])
+                    ->columns(4) 
+                    ->columnSpan(4)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['period_start'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('period_start', '>=', $date),
+                            )
+                            ->when(
+                                $data['period_end'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('period_end', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['period_start'] ?? null) {
+                            $indicators['period_start'] = 'Vendas de ' . Carbon::parse($data['period_start'])->format('d/m/Y');
+                        }
+                        if ($data['period_end'] ?? null) {
+                            $indicators['period_end'] = 'Até' . Carbon::parse($data['period_end'])->format('d/m/Y');
+                        }
+
+                        return $indicators;
+                    }),
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 ActionGroup::make([
                     Action::make('Ver Comprovante')
                         ->icon('heroicon-o-eye')
-                        ->url('teste'),
+                        ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#'),
                     Action::make('Ver Comprovante luz')
                         ->icon('heroicon-o-eye')
-                        ->url('teste'),
+                        ->url(fn ($record) => Storage::disk('public')->url($record->proof_light))
+                        ->visible(fn ($record) => $record->proof_light),
                     EditAction::make(),
                     DeleteAction::make()
                         ->requiresConfirmation()

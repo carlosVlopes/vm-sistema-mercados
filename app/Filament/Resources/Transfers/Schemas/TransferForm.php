@@ -7,6 +7,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Icon;
@@ -153,6 +154,14 @@ class TransferForm
                         ]),
 
 
+                ]),
+            Section::make('Observações')
+                ->icon(Icon::make(Heroicon::InformationCircle))
+                ->description('Caso queria colocar alguma observação para seu síndico ver.')
+                ->schema([
+                    Textarea::make('notes')
+                        ->hiddenLabel()
+                        ->placeholder('Sem observações cadastradas.'),
                 ]),
             Section::make('Comprovantes')
                 ->icon(Icon::make(Heroicon::Photo))
