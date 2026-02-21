@@ -7,20 +7,19 @@ use App\Filament\Resources\Transfers\Pages\EditTransfer;
 use App\Filament\Resources\Transfers\Pages\ListTransfers;
 use App\Filament\Resources\Transfers\Schemas\TransferForm;
 use App\Filament\Resources\Transfers\Tables\TransfersTable;
-use App\Jobs\SyncSalesJob;
-use App\Models\Calculation;
 use App\Models\Transfer;
 use BackedEnum;
-use Brick\Money\Money;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Brick\Money\Money;
+use Brick\Math\RoundingMode;
+use Brick\Money\Formatter\MoneyNumberFormatter;
+use NumberFormatter;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class TransferResource extends Resource
@@ -107,30 +106,69 @@ class TransferResource extends Resource
 
         $client = \App\Models\Client::find($clientId);
 
-        $calc = Calculation::create([
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd,
-            'status' => 'pending',
-            'progress' => 0
-        ]);
+        $sales_value = 0;
+        $page = 1;
+        $condominium_name = '';
 
-        $period = CarbonPeriod::create(
-            Carbon::parse($periodStart)->startOfDay(),
-            Carbon::parse($periodEnd)->endOfDay()
-        );
+        do {
 
-        foreach ($period as $date) {
-            SyncSalesJob::dispatch(
-                calc_id: $calc->id,
-                client_id: $clientId,
-                condominium_id: $condominiumId,
-                api_token: auth()->user()->api_token,
-                user_id: auth()->id(),
-                page: 1,
-                day: $date->toDateString() // ⭐ chave da divisão
-            );
-        }
+            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/cashless_sales', [
+                'access_token' => auth()->user()->api_token,
+                'client_id'    => $condominiumId,
+                'start_date'   => $periodStart,
+                'end_date'     => $periodEnd,
+                'per_page'     => 1000,
+                'page'         => $page,
+            ]);
 
-        return $calc->id;
+            $sales = $response->json();
+
+            $condominium_name = $sales[0]['client']['name'] ?? '';
+
+            foreach ($sales as $sale) {
+                $sales_value += floatval($sale['value']);
+            }
+
+            $hasMore = count($sales) === 1000;
+            $page++;
+
+        } while ($hasMore);
+
+        $sales = Money::of($sales_value, 'BRL');
+
+        $machineFee = $sales
+            ->multipliedBy(auth()->user()->machine_fee, RoundingMode::HALF_UP)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $taxesFee = $sales
+            ->multipliedBy(auth()->user()->taxes_fee, RoundingMode::HALF_UP)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $subtotal = $sales
+            ->minus($machineFee)
+            ->minus($taxesFee);
+
+        $netValue = $subtotal->multipliedBy(($client?->percentage / 100), RoundingMode::HALF_UP);
+
+        \Log::info('Sales Value: ' . $sales->getAmount());
+        \Log::info('Machine Fee: ' . $machineFee->getAmount());
+        \Log::info('Taxes Fee: ' . $taxesFee->getAmount());
+        \Log::info('Subtotal: ' . $subtotal->getAmount());
+        \Log::info('Net Value: ' . $netValue->getAmount());
+
+        $numberFormatter = new NumberFormatter('pt_BR', NumberFormatter::DECIMAL);
+        $formatter = new MoneyNumberFormatter($numberFormatter);
+
+        return [
+            'gross_total' => $formatter->format($sales),
+            'machine_fee' => $formatter->format($machineFee),
+            'taxes_fee'   => $formatter->format($taxesFee),
+            'net_total'    => $formatter->format($subtotal),
+            'transfer_value'   => $formatter->format($netValue),
+            'condominium_name' => $condominium_name,
+            'client_name' => $client?->name,
+            'client_email' => $client?->email,
+            'client_percentage' => $client?->percentage
+        ];
     }
 }

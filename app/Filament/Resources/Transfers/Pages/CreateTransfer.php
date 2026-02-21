@@ -23,20 +23,20 @@ class CreateTransfer extends CreateRecord
                 ->afterValidation(function($get, $set) {
                     $info = TransferResource::fetch_sales($get);
 
-                    $set('gross_total', $info['gross_total']);
-                    $set('gross_total_disabled', $info['gross_total']);
-                    $set('machine_fee', $info['machine_fee']);
-                    $set('taxes_fee', $info['taxes_fee']);
-                    $set('net_total', $info['net_total']);
-                    $set('transfer_value', $info['transfer_value']);
+                    // $set('gross_total', $info['gross_total']);
+                    // $set('gross_total_disabled', $info['gross_total']);
+                    // $set('machine_fee', $info['machine_fee']);
+                    // $set('taxes_fee', $info['taxes_fee']);
+                    // $set('net_total', $info['net_total']);
+                    // $set('transfer_value', $info['transfer_value']);
 
 
-                    $set('disabled_client_name', $info['client_name'] ?? '');
-                    $set('disabled_email', $info['client_email'] ?? '');
-                    $set('disabled_percentage', $info['client_percentage'] ?? 0);
-                    $set('disabled_period', date('d/m/Y', strtotime($get('period_start'))) . ' - ' . date('d/m/Y', strtotime($get('period_end'))));
-                    $set('disabled_condominium', $info['condominium_name']);
-                    $set('condominium_name', $info['condominium_name']);
+                    // $set('disabled_client_name', $info['client_name'] ?? '');
+                    // $set('disabled_email', $info['client_email'] ?? '');
+                    // $set('disabled_percentage', $info['client_percentage'] ?? 0);
+                    // $set('disabled_period', date('d/m/Y', strtotime($get('period_start'))) . ' - ' . date('d/m/Y', strtotime($get('period_end'))));
+                    // $set('disabled_condominium', $info['condominium_name']);
+                    // $set('condominium_name', $info['condominium_name']);
                 })
                 ->schema([
                     Section::make()

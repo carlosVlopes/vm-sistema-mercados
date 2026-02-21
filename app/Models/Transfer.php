@@ -33,9 +33,9 @@ class Transfer extends Model
 
     protected static function booted()
     {
-        static::creating(function ($transfer) {
+        static::creating(function ($user) {
             if (Auth::check()) {
-                $transfer->user_id = Auth::id();
+                $user->user_id = Auth::id();
             }
         });
     }

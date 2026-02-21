@@ -33,6 +33,11 @@ class Client extends Authenticatable implements FilamentUser
         return $this->hasMany(Transfer::class);
     }
 
+    public function calculations()
+    {
+        return $this->hasMany(Calculation::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($client) {
