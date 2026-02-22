@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Transfers\Schemas;
 
 use App\Filament\Resources\Transfers\TransferResource;
 use App\Models\Calculation;
-use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -19,7 +18,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\HtmlString;
 
 class TransferForm
 {
@@ -163,7 +161,6 @@ class TransferForm
                             ]),
                         Grid::make(1)
                             ->schema([
-                                Hidden::make('light_value')->default(0),
                                 TextInput::make('transfer_value')
                                     ->label(function (callable $get) {
                                         $percentage = $get('disabled_percentage');
@@ -174,39 +171,8 @@ class TransferForm
                                     })
                                     ->afterLabel(Text::make('Calculado sobre o total líquido.')->badge()->color('info'))
                                     ->prefix('R$')
-                                    ->reactive()
-                                    ->helperText(function (callable $get) {
-
-                                        $light = $get('light_value');
-
-                                        if (!$light) return null;
-
-                                        return new HtmlString('
-                                            <span>Valor da conta de luz: R$ ' . number_format($light, 2, ',', '.') . '</span>
-                                        ');
-                                    })
-                                    ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp))
+                                    ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp)),
                             ]),
-                        Action::make('teste')
-                            ->label('Adicionar valor de conta de luz')
-                            ->icon('heroicon-m-bolt')
-                            ->schema([
-                                TextInput::make('light_value')
-                                    ->label('Valor')
-                                    ->numeric()
-                                    ->prefix('R$')
-                                    ->required(),
-                            ])
-                            ->action(function (array $data,callable $get, callable $set) {
-                                $current = (float) ($get('transfer_value') ?? 0);
-                                $light   = (float) $data['light_value'];
-                                $current_light   = (float) $get('light_value');
-
-                                if($current_light) $current = $current - $current_light;
-
-                                $set('transfer_value', $current + $light);
-                                $set('light_value', $data['light_value']);
-                            })
                     ])->visible(fn ($get) => optional(Calculation::find($get('calc_id')))->status === 'done'),
                 Section::make('Observações')
                     ->icon(Icon::make(Heroicon::InformationCircle))
@@ -247,5 +213,5 @@ class TransferForm
             })
             ->visible(fn ($get) => filled($get('calc_id'))),
         ];
-    }
+    } 
 }

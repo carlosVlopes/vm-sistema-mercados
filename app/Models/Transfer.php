@@ -18,7 +18,8 @@ class Transfer extends Model
         'light_value',
         'proof_payment',
         'proof_light',
-        'user_id'
+        'user_id',
+        'notes'
     ];
 
     public function client()

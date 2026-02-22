@@ -13,7 +13,12 @@ class Calculation extends Model
         'status',
         'progress',
         'last_page',
-        'total'
+        'total_days',
+        'processed_days',
+        'total',
+        'client_id',
+        'condominium_id',
+        'condominium_name'
     ];
 
     public $timestamps = false;
@@ -21,6 +26,11 @@ class Calculation extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function condominium()
+    {
+        return $this->belongsTo(Condominium::class);
     }
 
     protected static function booted()

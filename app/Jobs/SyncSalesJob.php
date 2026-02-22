@@ -6,6 +6,7 @@ use App\Models\Calculation;
 use App\Models\Sale;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class SyncSalesJob implements ShouldQueue
@@ -49,30 +50,22 @@ class SyncSalesJob implements ShouldQueue
 
         $data = $response->json();
 
-        \Log::info($this->page);
-        \Log::info(count($data));
-
+        $dayTotal = 0;
+    
         foreach ($data as $sale) 
         {
             Sale::upsertFromApi($sale, $this->client_id, $this->condominium_id, $this->user_id);
+            $dayTotal += $sale['value'];
         }
 
         $hasMore = count($data) === 300;
 
         if(!$hasMore)
         { 
-            $total = Sale::period(
-                client_id: $this->client_id,
-                condominium_id: $this->condominium_id,
-                period_start: $this->day . ' 00:00:00',
-                period_end: $this->day . ' 23:59:59',
-            )->sum('value'); 
-
-            $calc->increment('total', $total);
-
-            \Log::info('Total atualizado: ' . $calc->fresh()->total);
-
-            $calc->increment('processed_days');
+            $calc->update([
+                'processed_days' => DB::raw('processed_days + 1'),
+                'total' => DB::raw("total + {$dayTotal}"),
+            ]);
 
             $calc->refresh();
 

@@ -11,6 +11,8 @@ use App\Jobs\SyncSalesJob;
 use App\Models\Calculation;
 use App\Models\Transfer;
 use BackedEnum;
+use Brick\Math\RoundingMode;
+use Brick\Money\Formatter\MoneyNumberFormatter;
 use Brick\Money\Money;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -21,6 +23,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use NumberFormatter;
 
 
 class TransferResource extends Resource
@@ -107,15 +110,18 @@ class TransferResource extends Resource
 
         $client = \App\Models\Client::find($clientId);
 
-        $period = CarbonPeriod::create(
-            Carbon::parse($periodStart)->startOfDay(),
-            Carbon::parse($periodEnd)->endOfDay()
-        );
-
         $periodStartCarbon = Carbon::parse($periodStart)->startOfDay();
-        $periodEndCarbon   = Carbon::parse($periodEnd)->endOfDay();
+        $periodEndCarbon   = Carbon::parse($get('period_end'));
 
         $totalDays = $periodStartCarbon->diffInDays($periodEndCarbon) + 1;
+
+        $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominiumId, [
+            'access_token' => auth()->user()->api_token
+        ]);
+
+        $condominium = $response->json();
+
+        if(!count($condominium)) return [];
 
         $calc = Calculation::create([
             'period_start' => $periodStart,
@@ -124,6 +130,9 @@ class TransferResource extends Resource
             'progress' => 0,
             'total_days'   => $totalDays,
             'processed_days' => 0,
+            'client_id' => $clientId,
+            'condominium_id' => $condominiumId,
+            'condominium_name' => $condominium['name']
         ]);
 
         $period = CarbonPeriod::create(
@@ -144,5 +153,43 @@ class TransferResource extends Resource
         }
 
         return $calc;
+    }
+
+    public static function setInfos(Calculation $calc, $set)
+    {
+        $sales = Money::of($calc->total, 'BRL');
+
+        $machineFee = $sales
+            ->multipliedBy(auth()->user()->machine_fee, RoundingMode::HALF_UP)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $taxesFee = $sales
+            ->multipliedBy(auth()->user()->taxes_fee, RoundingMode::HALF_UP)
+            ->dividedBy(100, RoundingMode::HALF_UP);
+
+        $subtotal = $sales
+            ->minus($machineFee)
+            ->minus($taxesFee);
+
+        $netValue = $subtotal->multipliedBy(($calc->client->percentage / 100), RoundingMode::HALF_UP);
+
+        $numberFormatter = new NumberFormatter('pt_BR', NumberFormatter::DECIMAL);
+        $formatter = new MoneyNumberFormatter($numberFormatter);
+
+        $set('gross_total', $formatter->format($sales));
+
+        $set('gross_total_disabled', $formatter->format($sales));
+
+        $set('machine_fee', $formatter->format($machineFee));
+        $set('taxes_fee', $formatter->format($taxesFee));
+        $set('net_total', $formatter->format($subtotal));
+        $set('transfer_value', $formatter->format($netValue));
+
+        $set('disabled_client_name', $calc->client->name);
+        $set('disabled_email', $calc->client->email);
+        $set('disabled_percentage', $calc->client->percentage);
+        $set('disabled_period', date('d/m/Y', strtotime($calc->period_start)) . ' - ' . date('d/m/Y', strtotime($calc->period_end)));
+        $set('disabled_condominium', $calc->condominium_name);
+        $set('condominium_name', $calc->condominium_name);
     }
 }
