@@ -24,7 +24,6 @@ class SetupAccount extends Page implements HasForms
 
     protected static bool $shouldRegisterNavigation = false;
 
-    // 1. Propriedade para segurar os dados do form
     public ?array $data = [];
 
     public function mount(): void
@@ -38,14 +37,13 @@ class SetupAccount extends Page implements HasForms
         ];
     }
 
-    // 3. Método Form (Não estático e recebe Form $form)
     public function form(Schema $schema): Schema
     {
         return $schema
             ->statePath('data')
             ->components([ 
                 Section::make('Configurações de Taxas e API')
-                    ->description('Configure a taxa de máquina, impostos e o token da API para começar a usar o sistema.')
+                    ->description(fn () => (auth()->user()->api_token) ? 'Configure a taxa de máquina, impostos e o token da API.' : 'Configure a taxa de máquina, impostos e o token da API para começar a usar o sistema.')
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -68,7 +66,6 @@ class SetupAccount extends Page implements HasForms
             ]);
     }
 
-    // 4. Método para salvar
     public function save(): void
     {
         $data = $this->form->getState();

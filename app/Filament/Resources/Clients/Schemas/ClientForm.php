@@ -15,7 +15,6 @@ class ClientForm
     {
         return $schema
             ->components([
-                // Nome
                 TextInput::make('name')
                     ->label('Nome')
                     ->required()
@@ -27,18 +26,30 @@ class ClientForm
 
                         return ClientResource::get_condominiums($clientId);
                     })
-                    ->loadStateFromRelationshipsUsing(function ($record, $set) {
+                    // ->loadStateFromRelationshipsUsing(function ($record, $set) {
 
-                        $ids = \DB::table('clients_condominiums')
-                            ->where('client_id', $record->id)
+                    //     $ids = \DB::table('clients_condominiums')
+                    //         ->where('client_id', $record->id)
+                    //         ->pluck('condominium_id')
+                    //         ->toArray();
+
+                    //     $set('condominiums_ids', $ids);
+                    // })
+                    // ->live()
+                    // ->multiple()
+                    // ->afterStateUpdated(function ($record, $state) {
+                    //     $record->condominiums_ids()->sync($state);
+                    // })
+                    // Carrega os IDs salvos no banco para preencher o select ao editar
+                    ->multiple()
+                    ->searchable()
+                    ->formatStateUsing(function ($record) {
+                        return \DB::table('clients_condominiums')
+                            ->where('client_id', $record?->id)
                             ->pluck('condominium_id')
                             ->toArray();
-
-                        $set('condominiums_ids', $ids);
-                        $set('condominiums_ids', $ids);
                     })
-                    ->multiple()
-                    ->searchable(),
+                    ->dehydrated(false),
                 // Telefone
                 TextInput::make('phonenumber')
                     ->label('Telefone')

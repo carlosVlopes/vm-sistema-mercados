@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Transfers;
 
 use App\Filament\Resources\Transfers\Pages\CreateTransfer;
-use App\Filament\Resources\Transfers\Pages\EditTransfer;
 use App\Filament\Resources\Transfers\Pages\ListTransfers;
+use App\Filament\Resources\Transfers\Pages\ViewTransfer;
 use App\Filament\Resources\Transfers\Schemas\TransferForm;
 use App\Filament\Resources\Transfers\Tables\TransfersTable;
 use App\Jobs\SyncSalesJob;
@@ -36,7 +36,7 @@ class TransferResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'repasses';
+    protected static ?string $recordTitleAttribute = 'condominium_name';
 
     protected static ?string $modelLabel = 'repasse'; // texto do botao/inserir/edita
 
@@ -68,7 +68,7 @@ class TransferResource extends Resource
         return [
             'index' => ListTransfers::route('/'),
             'create' => CreateTransfer::route('/create'),
-            'edit' => EditTransfer::route('/{record}/edit'),
+            'view' => ViewTransfer::route('/{record}'),
         ];
     }
 

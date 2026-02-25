@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Transfers\Pages;
 use App\Filament\Resources\Transfers\Schemas\TransferForm;
 use App\Filament\Resources\Transfers\TransferResource;
 use Brick\Money\Money;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard\Step;
@@ -23,9 +24,10 @@ class CreateTransfer extends CreateRecord
                     $calc = TransferResource::fetch_sales($get);
 
                     $set('calc_id', $calc->id);     
+                    $set('calc_status', $calc->status);
 
                     if ($calc?->status !== 'done') {
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Processando vendas...')
                             ->warning()
                             ->send();

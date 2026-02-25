@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 
 class TransferForm
@@ -55,17 +56,12 @@ class TransferForm
                                 return [];
                             }
 
-                            $options = cache()->remember(
-                                "client_{$clientId}_condominiums",
-                                600,
-                                fn () => TransferResource::get_client_condominiums($clientId)
-                            );
-
-                            return $options;
+                            return TransferResource::get_client_condominiums($clientId);
                         })
                         ->disabled(fn (callable $get) => ! $get('client_id'))
                         ->placeholder('Selecione um cliente primeiro')
                         ->searchable()
+                        ->reactive()
                         ->required(),
                 ]),
             Grid::make(2)
@@ -91,7 +87,7 @@ class TransferForm
     {
         return [
             Placeholder::make('progress')
-                ->label('Processando vendas')
+                ->hiddenLabel()
                 ->content(function ($get, $set) {
                     $calc = Calculation::find($get('calc_id'));
 
@@ -99,13 +95,16 @@ class TransferForm
                         return 'Iniciando...';
                     }
 
-                    if ($calc->status === 'done') {
-                        return '✅ Finalizado!';
-                    }
-
-                    return "🔄 Processando... {$calc->progress}%";
+                    return new HtmlString(
+                        Blade::render('
+                            <x-filament::loading-indicator class="h-5 w-5" />
+                            Processando... {{ $progress }}%
+                        ', [
+                            'progress' => $calc->progress,
+                        ])
+                    );
                 })
-                ->visible(fn ($get) => filled($get('calc_id'))),
+                ->visible(fn ($get) => Calculation::find($get('calc_id'))?->status !== 'done'),
             Hidden::make('condominium_name'),
             Group::make([
                 Section::make('Dados do Síndico')

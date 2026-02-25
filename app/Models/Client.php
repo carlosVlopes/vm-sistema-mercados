@@ -18,6 +18,10 @@ class Client extends Authenticatable implements FilamentUser
         'register_token'
     ];
 
+    protected $casts = [
+        'condominiums_ids' => 'array', // Evita o erro de conversão
+    ];
+
     public function condominiums()
     {
         return $this->belongsToMany(

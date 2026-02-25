@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Transfers\Tables;
 
+use App\Models\Transfer;
 use Brick\Money\Money;
-use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
@@ -19,7 +19,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 class TransfersTable
 {
@@ -60,37 +59,46 @@ class TransfersTable
                     })
                     ->sortable(),
             ])
+            ->defaultSort('date', 'desc')
             ->filters([
                 SelectFilter::make('client')
                     ->label('Cliente')
                     ->relationship('client', 'name'),
-                Filter::make('period')
+                SelectFilter::make('condominium_name')
+                    ->label('Condomínio')
+                    ->options(
+                        Transfer::query()
+                            ->distinct()
+                            ->pluck('condominium_name', 'condominium_name')
+                            ->toArray()
+                    ),
+                Filter::make('date')
                     ->form([
-                        DatePicker::make('period_start')
-                            ->label('Início das vendas'),
-                        DatePicker::make('period_end')
-                            ->label('Fim das vendas'),
+                        DatePicker::make('date_start')
+                            ->label('Data inicial'),
+                        DatePicker::make('date_end')
+                            ->label('Data final'),
                     ])
                     ->columns(3) 
                     ->columnSpan(3)
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['period_start'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('period_start', '>=', $date),
+                                $data['date_start'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '>=', $date),
                             )
                             ->when(
-                                $data['period_end'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('period_end', '<=', $date),
+                                $data['date_end'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if ($data['period_start'] ?? null) {
-                            $indicators['period_start'] = 'Vendas de ' . Carbon::parse($data['period_start'])->format('d/m/Y');
+                        if ($data['date_start'] ?? null) {
+                            $indicators['date_start'] = 'Repasses de ' . Carbon::parse($data['date_start'])->format('d/m/Y');
                         }
-                        if ($data['period_end'] ?? null) {
-                            $indicators['period_end'] = 'Até' . Carbon::parse($data['period_end'])->format('d/m/Y');
+                        if ($data['date_end'] ?? null) {
+                            $indicators['date_end'] = 'Até ' . Carbon::parse($data['date_end'])->format('d/m/Y');
                         }
 
                         return $indicators;
@@ -98,14 +106,8 @@ class TransfersTable
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('Ver Comprovante')
-                        ->icon('heroicon-o-eye')
-                        ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#'),
-                    Action::make('Ver Comprovante luz')
-                        ->icon('heroicon-o-eye')
-                        ->url(fn ($record) => Storage::disk('public')->url($record->proof_light))
-                        ->visible(fn ($record) => $record->proof_light),
-                    EditAction::make(),
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye'),
                     DeleteAction::make()
                         ->requiresConfirmation()
                 ])
