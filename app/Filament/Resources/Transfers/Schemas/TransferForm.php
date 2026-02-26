@@ -88,23 +88,34 @@ class TransferForm
         return [
             Placeholder::make('progress')
                 ->hiddenLabel()
-                ->content(function ($get, $set) {
+                ->content(function ($get) {
                     $calc = Calculation::find($get('calc_id'));
 
-                    if (!$calc) {
-                        return 'Iniciando...';
-                    }
+                    $isError = $calc?->status === 'error';
+                    $progress = $calc?->progress ?? 0;
+                    $processedDays = $calc?->processed_days ?? 0;
+                    $totalDays = $calc?->total_days ?? 0;
+                    $statusText = match(true) {
+                        !$calc => 'Iniciando sincronização...',
+                        $progress < 25 => 'Buscando vendas na API...',
+                        $progress < 75 => 'Processando vendas...',
+                        default => 'Finalizando cálculos...',
+                    };
 
                     return new HtmlString(
-                        Blade::render('
-                            <x-filament::loading-indicator class="h-5 w-5" />
-                            Processando... {{ $progress }}%
-                        ', [
-                            'progress' => $calc->progress,
-                        ])
+                        Blade::render(
+                            file_get_contents(resource_path('views/filament/transfer-progress.blade.php')),
+                            [
+                                'isError' => $isError,
+                                'progress' => $progress,
+                                'processedDays' => $processedDays,
+                                'totalDays' => $totalDays,
+                                'statusText' => $statusText,
+                            ]
+                        )
                     );
                 })
-                ->visible(fn ($get) => Calculation::find($get('calc_id'))?->status !== 'done'),
+                ->visible(fn ($get) => filled($get('calc_id')) && Calculation::find($get('calc_id'))?->status !== 'done'),
             Hidden::make('condominium_name'),
             Group::make([
                 Section::make('Dados do Síndico')
@@ -236,9 +247,15 @@ class TransferForm
             ])
             ->reactive()
             ->poll(function ($get, $set) {
+                if (!filled($get('calc_id'))) return null;
+
                 $calc = Calculation::find($get('calc_id'));
-                
-                if(!$calc || $calc->status !== 'done') return '2s'; 
+
+                if (!$calc) return '2s';
+
+                if ($calc->status === 'error') return null;
+
+                if ($calc->status !== 'done') return '2s';
 
                 TransferResource::setInfos($calc, $set);
 

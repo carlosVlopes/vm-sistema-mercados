@@ -26,6 +26,15 @@ class SyncSalesJob implements ShouldQueue
         protected string $day
     ) {}
 
+    public function failed(\Throwable $exception): void
+    {
+        $calc = Calculation::find($this->calc_id);
+
+        if ($calc) {
+            $calc->update(['status' => 'error']);
+        }
+    }
+
     /**
      * Execute the job.
      */
