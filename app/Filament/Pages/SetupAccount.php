@@ -5,11 +5,11 @@ namespace App\Filament\Pages;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Http;
 
 class SetupAccount extends Page implements HasForms
@@ -26,9 +26,46 @@ class SetupAccount extends Page implements HasForms
 
     public ?array $data = [];
 
+    public ?string $status = ''; // null, 'loading', 'error', 'success'
+
+    public bool $isFirstSetup = false;
+
+    public function getLayout(): string
+    {
+        if ($this->isFirstSetup) {
+            return 'filament-panels::components.layout.simple';
+        }
+
+        return parent::getLayout();
+    }
+
+    public function getMaxContentWidth(): Width | string | null
+    {
+        if ($this->isFirstSetup) {
+            return Width::FourExtraLarge;
+        }
+
+        return parent::getMaxContentWidth();
+    }
+
+    protected function getLayoutData(): array
+    {
+        if ($this->isFirstSetup) {
+            return [
+                'hasTopbar' => false,
+                'maxContentWidth' => $this->getMaxContentWidth(),
+                'maxWidth' => $this->getMaxContentWidth(),
+            ];
+        }
+
+        return parent::getLayoutData();
+    }
+
     public function mount(): void
     {
         $user = auth()->user();
+
+        $this->isFirstSetup = ! $user->isConfigured();
 
         $this->data = [
             'machine_fee' => $user->machine_fee,
@@ -39,47 +76,60 @@ class SetupAccount extends Page implements HasForms
 
     public function form(Schema $schema): Schema
     {
+        $fields = [
+            Grid::make(2)
+                ->schema([
+                    TextInput::make('machine_fee')
+                        ->label('Taxa de Máquina (%)')
+                        ->numeric()
+                        ->required()
+                        ->suffix('%'),
+
+                    TextInput::make('taxes_fee')
+                        ->label('Taxa de Impostos (%)')
+                        ->numeric()
+                        ->required()
+                        ->suffix('%'),
+                ]),
+            TextInput::make('api_token')
+                ->label('Token da API')
+                ->required(),
+        ];
+
+        if ($this->isFirstSetup) {
+            return $schema
+                ->statePath('data')
+                ->components($fields);
+        }
+
         return $schema
             ->statePath('data')
-            ->components([ 
+            ->components([
                 Section::make('Configurações de Taxas e API')
-                    ->description(fn () => (auth()->user()->api_token) ? 'Configure a taxa de máquina, impostos e o token da API.' : 'Configure a taxa de máquina, impostos e o token da API para começar a usar o sistema.')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                TextInput::make('machine_fee')
-                                    ->label('Taxa de Máquina (%)')
-                                    ->numeric()
-                                    ->required()
-                                    ->suffix('%'),
-                                
-                                TextInput::make('taxes_fee')
-                                    ->label('Taxa de Impostos (%)')
-                                    ->numeric()
-                                    ->required()
-                                    ->suffix('%'),
-                            ]),
-                        TextInput::make('api_token')
-                            ->label('Token da API')
-                            ->required()
-                    ])
+                    ->description('Configure a taxa de máquina, impostos e o token da API.')
+                    ->schema($fields),
             ]);
     }
 
     public function save(): void
     {
-        $data = $this->form->getState();
+        $this->form->getState();
+
+        $this->status = 'loading';
+
+        $this->validateToken();
+    }
+
+    public function validateToken(): void
+    {
+        $data = $this->data;
 
         $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
             'access_token' => $data['api_token'],
         ]);
 
-        if($response->status() != 200)
-        {
-            Notification::make()
-                ->danger()
-                ->title('Não conseguimos validar esse token, por favor verifique o token e tente novamente!')
-                ->send();
+        if ($response->status() != 200) {
+            $this->status = 'error';
 
             return;
         }
@@ -91,11 +141,6 @@ class SetupAccount extends Page implements HasForms
         $user->api_token = $data['api_token'];
         $user->save();
 
-        Notification::make()
-            ->success()
-            ->title('Configurações salvas com sucesso!')
-            ->send();
-
-        $this->redirect(route('filament.painel.pages.dashboard'));
+        $this->status = 'success';
     }
 }

@@ -8,6 +8,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 
 class ClientForm
 {
@@ -15,75 +17,59 @@ class ClientForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label('Nome')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('condominiums_ids')
-                    ->label('Condomínios')
-                    ->options(function ($livewire) {
-                        $clientId = $livewire->record?->id;
+                Section::make()
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Nome')
+                                    ->required()
+                                    ->maxLength(255),
+                                Select::make('condominiums_ids')
+                                    ->label('Condomínios')
+                                    ->options(function ($livewire) {
+                                        $clientId = $livewire->record?->id;
 
-                        return ClientResource::get_condominiums($clientId);
-                    })
-                    // ->loadStateFromRelationshipsUsing(function ($record, $set) {
+                                        return ClientResource::get_condominiums($clientId);
+                                    })
+                                    ->multiple()
+                                    ->searchable()
+                                    ->formatStateUsing(function ($record) {
+                                        return \DB::table('clients_condominiums')
+                                            ->where('client_id', $record?->id)
+                                            ->pluck('condominium_id')
+                                            ->toArray();
+                                    })
+                                    ->dehydrated(false),
+                                TextInput::make('phonenumber')
+                                    ->label('Telefone')
+                                    ->tel()
+                                    ->mask('(99) 99999-9999')
+                                    ->maxLength(20),
 
-                    //     $ids = \DB::table('clients_condominiums')
-                    //         ->where('client_id', $record->id)
-                    //         ->pluck('condominium_id')
-                    //         ->toArray();
-
-                    //     $set('condominiums_ids', $ids);
-                    // })
-                    // ->live()
-                    // ->multiple()
-                    // ->afterStateUpdated(function ($record, $state) {
-                    //     $record->condominiums_ids()->sync($state);
-                    // })
-                    // Carrega os IDs salvos no banco para preencher o select ao editar
-                    ->multiple()
-                    ->searchable()
-                    ->formatStateUsing(function ($record) {
-                        return \DB::table('clients_condominiums')
-                            ->where('client_id', $record?->id)
-                            ->pluck('condominium_id')
-                            ->toArray();
-                    })
-                    ->dehydrated(false),
-                // Telefone
-                TextInput::make('phonenumber')
-                    ->label('Telefone')
-                    ->tel()
-                    ->mask('(99) 99999-9999')
-                    ->maxLength(20),
-
-                // Email
-                TextInput::make('email')
-                    ->label('E-mail')
-                    ->email()
-                    ->required()
-                    ->unique(table: Client::class, column: 'email', ignoreRecord: true)
-                    ->validationMessages([
-                        'unique' => 'Este e-mail já está em uso por outro cliente.'
-                    ])
-                    ->maxLength(255),
-                
-                // Percentual
-                TextInput::make('percentage')
-                    ->label('Percentual (%)')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(100)
-                    ->required()
-                    ->step(0.01),
-
-                // Recebe luz
-                Toggle::make('receives_light')
-                    ->label('Cliente recebe valor da conta de luz?')
-                    ->inline(false)
-                    ->default(false),
+                                TextInput::make('email')
+                                    ->label('E-mail')
+                                    ->email()
+                                    ->required()
+                                    ->unique(table: Client::class, column: 'email', ignoreRecord: true)
+                                    ->validationMessages([
+                                        'unique' => 'Este e-mail já está em uso por outro cliente.'
+                                    ])
+                                    ->maxLength(255),
+                                TextInput::make('percentage')
+                                    ->label('Percentual (%)')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->required()
+                                    ->step(0.01),
+                                Toggle::make('receives_light')
+                                    ->label('Cliente recebe valor da conta de luz?')
+                                    ->inline(false)
+                                    ->default(false),
+                            ]), 
+                    ])->columnSpanFull()
             ]);
     }
-
     
 }
