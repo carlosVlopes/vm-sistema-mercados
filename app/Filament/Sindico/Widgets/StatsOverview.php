@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Sindico\Widgets;
 
 use App\Models\Transfer;
 use Brick\Money\Money;
@@ -21,11 +21,11 @@ class StatsOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Valor total de repasses', Money::ofMinor(Transfer::query()->where('user_id', auth()->id())->sum('transfer_value'), 'BRL')->formatTo('pt_BR'))
+            Stat::make('Valor total de repasses', Money::ofMinor(Transfer::query()->where('client_id', auth()->id())->sum('transfer_value'), 'BRL')->formatTo('pt_BR'))
                 ->color('success')
                 ->icon('heroicon-m-arrow-trending-up')
-                ->description(Transfer::query()->where('user_id', auth()->id())->count() . ' repasses'),
-            Stat::make('Gasto total com energia', Money::ofMinor(Transfer::query()->where('user_id', auth()->id())->sum('light_value'), 'BRL')->formatTo('pt_BR'))
+                ->description(Transfer::query()->where('client_id', auth()->id())->count() . ' repasses'),
+            Stat::make('Valor total com energia', Money::ofMinor(Transfer::query()->where('client_id', auth()->id())->sum('light_value'), 'BRL')->formatTo('pt_BR'))
                 ->icon('heroicon-m-bolt')    
                 ->color('info')
                 ->chart([7, 2, 10, 3, 15, 4, 17]),

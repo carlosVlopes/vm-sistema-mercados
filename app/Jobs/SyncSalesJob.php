@@ -92,6 +92,9 @@ class SyncSalesJob implements ShouldQueue
             return; 
         }
         
+        \Log::info('more than 300 | day: ' . $this->day);
+        \Log::info($data);
+
         $nextPage = $this->page + 1;
 
         SyncSalesJob::dispatch(

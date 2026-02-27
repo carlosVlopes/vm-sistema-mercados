@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Clients\Pages;
 
 use App\Filament\Resources\Clients\ClientResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Js;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -20,21 +21,41 @@ class CreateClient extends CreateRecord
         return [
             Action::make('registerLink')
                 ->label('Link de cadastro de senha')
-                ->modalHeading('Envie esse link para seu cliente cadastrar a senha.')
+                ->modalHeading('Síndico criado com sucesso!')
+                ->modalDescription('Copie o link abaixo e envie para o seu síndico cadastrar a senha de acesso ao painel.')
+                ->modalIcon('heroicon-o-check-circle')
+                ->modalIconColor('success')
+                ->modalWidth('xl')
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Fechar')
+                ->modalCloseButton(false)
+                ->closeModalByClickingAway(false)
+                ->modalCancelAction(
+                    Action::make('cancel')
+                        ->label('Fechar')
+                        ->color('gray')
+                        ->url(fn () => static::getUrl())
+                )
                 ->form([
                     TextInput::make('url')
-                        ->label('URL')
+                        ->label('Link de cadastro de senha')
                         ->default(fn () => $this->registerUrl)
                         ->readOnly()
+                        ->helperText('Clique no ícone ao lado para copiar o link.')
                         ->suffixAction(
                             Action::make('copy')
-                                ->icon('heroicon-o-clipboard')
-                                ->action(fn ($state) => null)
-                                ->extraAttributes([
-                                    'x-on:click' => 'navigator.clipboard.writeText($el.closest("[x-data]").querySelector("input").value)'
-                                ])
+                                ->icon('heroicon-o-clipboard-document')
+                                ->color('primary')
+                                ->tooltip('Copiar link')
+                                ->action(function () {
+                                    $this->js('navigator.clipboard.writeText(' . Js::from($this->registerUrl) . ')');
+
+                                    Notification::make()
+                                        ->title('Link copiado!')
+                                        ->success()
+                                        ->duration(2000)
+                                        ->send();
+                                })
                         ),
                 ])
                 ->visible(fn () => filled($this->registerUrl)),
@@ -62,7 +83,6 @@ class CreateClient extends CreateRecord
 
         Notification::make()
             ->title('Cliente criado com sucesso')
-            ->body('Copie o link para o cliente registrar a senha.')
             ->success()
             ->send();
 

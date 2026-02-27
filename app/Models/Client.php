@@ -13,9 +13,14 @@ class Client extends Authenticatable implements FilamentUser
         'name',
         'phonenumber',
         'email',
+        'password',
         'percentage',
         'receives_light',
         'register_token'
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected $casts = [

@@ -6,12 +6,10 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+use App\Filament\Sindico\Pages\EditProfile;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -29,20 +27,15 @@ class SindicoPanelProvider extends PanelProvider
             ->path('sindico')
             ->authGuard('client')
             ->login()
-            ->profile()
+            ->profile(EditProfile::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Sindico/Resources'), for: 'App\Filament\Sindico\Resources')
             ->discoverPages(in: app_path('Filament/Sindico/Pages'), for: 'App\Filament\Sindico\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
+            ->pages([])
             ->discoverWidgets(in: app_path('Filament/Sindico/Widgets'), for: 'App\Filament\Sindico\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
