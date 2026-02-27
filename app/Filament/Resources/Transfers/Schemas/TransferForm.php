@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Support\RawJs;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 
@@ -184,6 +185,23 @@ class TransferForm
                                     })
                                     ->afterLabel(Text::make('Calculado sobre o total líquido.')->badge()->color('info'))
                                     ->prefix('R$')
+                                    ->mask(RawJs::make(<<<'JS'
+                                        function(input) {
+                                            let digits = input.replace(/\D/g, '');
+                                            if (digits.length === 0) return ',';
+                                            while (digits.length < 3) digits = '0' + digits;
+                                            let intPart = digits.slice(0, -2);
+                                            let mask = '';
+                                            let count = 0;
+                                            for (let i = intPart.length - 1; i >= 0; i--) {
+                                                if (count > 0 && count % 3 === 0) mask = '.' + mask;
+                                                mask = '9' + mask;
+                                                count++;
+                                            }
+                                            return mask + ',99';
+                                        }
+                                    JS))
+                                    ->stripCharacters('.')
                                     ->reactive()
                                     ->helperText(function (callable $get) {
 
@@ -191,8 +209,10 @@ class TransferForm
 
                                         if (!$light) return null;
 
+                                        $lightFloat = (float) str_replace(',', '.', $light);
+
                                         return new HtmlString('
-                                            <span>Valor da conta de luz: R$ ' . number_format($light, 2, ',', '.') . '</span>
+                                            <span>Valor da conta de luz: R$ ' . number_format($lightFloat, 2, ',', '.') . '</span>
                                         ');
                                     })
                                     ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp))
@@ -203,18 +223,40 @@ class TransferForm
                             ->schema([
                                 TextInput::make('light_value')
                                     ->label('Valor')
-                                    ->numeric()
                                     ->prefix('R$')
+                                    ->mask(RawJs::make(<<<'JS'
+                                        function(input) {
+                                            let digits = input.replace(/\D/g, '');
+                                            if (digits.length === 0) return ',';
+                                            while (digits.length < 3) digits = '0' + digits;
+                                            let intPart = digits.slice(0, -2);
+                                            let mask = '';
+                                            let count = 0;
+                                            for (let i = intPart.length - 1; i >= 0; i--) {
+                                                if (count > 0 && count % 3 === 0) mask = '.' + mask;
+                                                mask = '9' + mask;
+                                                count++;
+                                            }
+                                            return mask + ',99';
+                                        }
+                                    JS))
+                                    ->stripCharacters('.')
                                     ->required(),
                             ])
-                            ->action(function (array $data,callable $get, callable $set) {
-                                $current = (float) ($get('transfer_value') ?? 0);
-                                $light   = (float) $data['light_value'];
-                                $current_light   = (float) $get('light_value');
+                            ->action(function (array $data, callable $get, callable $set) {
+                                $parseBrl = fn ($value) => (float) str_replace(',', '.', $value ?? '0');
 
-                                if($current_light) $current = $current - $current_light;
+                                $current = $parseBrl($get('transfer_value'));
+                                $light   = $parseBrl($data['light_value']);
+                                $currentLight = $parseBrl($get('light_value'));
 
-                                $set('transfer_value', $current + $light);
+                                if ($currentLight) {
+                                    $current = $current - $currentLight;
+                                }
+
+                                $newValue = $current + $light;
+
+                                $set('transfer_value', number_format($newValue, 2, ',', '.'));
                                 $set('light_value', $data['light_value']);
                             })
                     ])->visible(fn ($get) => optional(Calculation::find($get('calc_id')))->status === 'done'),
@@ -249,6 +291,8 @@ class TransferForm
             ->poll(function ($get, $set) {
                 if (!filled($get('calc_id'))) return null;
 
+                if ($get('finished')) return null;
+
                 $calc = Calculation::find($get('calc_id'));
 
                 if (!$calc) return '2s';
@@ -258,6 +302,7 @@ class TransferForm
                 if ($calc->status !== 'done') return '2s';
 
                 TransferResource::setInfos($calc, $set);
+                $set('finished', true);
 
                 return null;
             })

@@ -34,6 +34,7 @@ class ClientForm
                                     })
                                     ->multiple()
                                     ->searchable()
+                                    ->required()
                                     ->formatStateUsing(function ($record) {
                                         return \DB::table('clients_condominiums')
                                             ->where('client_id', $record?->id)
