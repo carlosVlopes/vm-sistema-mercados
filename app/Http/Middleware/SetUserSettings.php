@@ -22,9 +22,9 @@ class SetUserSettings
         }
 
         // evita loop
-        if ($user && !$user->isConfigured() && !$request->routeIs('filament.painel.pages.setup-account')) 
+        if ($user && !$user->isConfigured() && !$request->routeIs('filament.painel.pages.configuracoes')) 
         {
-            return redirect()->route('filament.painel.pages.setup-account');
+            return redirect()->route('filament.painel.pages.configuracoes');
         }
 
         return $next($request);
