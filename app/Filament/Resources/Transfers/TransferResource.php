@@ -21,8 +21,10 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use NumberFormatter;
 
 
@@ -37,6 +39,8 @@ class TransferResource extends Resource
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'condominium_name';
+
+    protected static ?string $slug = 'repasses';
 
     protected static ?string $modelLabel = 'repasse'; // texto do botao/inserir/edita
 
@@ -108,20 +112,61 @@ class TransferResource extends Resource
             return [];
         }
 
-        $client = \App\Models\Client::find($clientId);
-
         $periodStartCarbon = Carbon::parse($periodStart)->startOfDay();
         $periodEndCarbon   = Carbon::parse($get('period_end'));
 
         $totalDays = $periodStartCarbon->diffInDays($periodEndCarbon) + 1;
 
-        $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominiumId, [
-            'access_token' => auth()->user()->api_token
-        ]);
+        if ($totalDays > 90) {
+            Notification::make()
+                ->title('Período muito longo')
+                ->body('O período máximo permitido é de 90 dias. Selecione um período menor.')
+                ->danger()
+                ->send();
+
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(30)->get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominiumId, [
+                'access_token' => auth()->user()->api_token
+            ]);
+        } catch (\Exception $e) {
+            Log::error('fetch_sales: erro ao buscar condomínio na API', [
+                'condominium_id' => $condominiumId,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title('Erro de conexão')
+                ->body('Não foi possível conectar à API VM-PAY. Tente novamente.')
+                ->danger()
+                ->send();
+
+            return [];
+        }
+
+        if (!$response->successful()) {
+            Notification::make()
+                ->title('Erro na API')
+                ->body("A API retornou o status {$response->status()}. Verifique seu token de acesso.")
+                ->danger()
+                ->send();
+
+            return [];
+        }
 
         $condominium = $response->json();
 
-        if(!count($condominium)) return [];
+        if (!is_array($condominium) || empty($condominium) || !isset($condominium['name'])) {
+            Notification::make()
+                ->title('Condomínio não encontrado')
+                ->body('Não foi possível obter os dados do condomínio selecionado.')
+                ->danger()
+                ->send();
+
+            return [];
+        }
 
         $calc = Calculation::create([
             'period_start' => $periodStart,

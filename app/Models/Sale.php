@@ -46,6 +46,27 @@ class Sale extends Model
         );
     }
 
+    public static function upsertBulkFromApi(array $sales, int $client_id, int $condominium_id, int $user_id): void
+    {
+        $records = array_map(fn ($sale) => [
+            'api_id' => $sale['id'],
+            'client_id' => $client_id,
+            'user_id' => $user_id,
+            'condominium_id' => $condominium_id,
+            'value' => $sale['value'] ?? 0,
+            'sold_at' => Carbon::parse($sale['occurred_at'])->timezone('America/Sao_Paulo'),
+            'payload' => json_encode($sale),
+        ], $sales);
+
+        foreach (array_chunk($records, 100) as $chunk) {
+            static::upsert(
+                $chunk,
+                ['api_id', 'client_id'],
+                ['user_id', 'condominium_id', 'value', 'sold_at', 'payload']
+            );
+        }
+    }
+
     public function scopePeriod(Builder $query, int $client_id, int $condominium_id, string $period_start, string $period_end): Builder
     {
         return $query

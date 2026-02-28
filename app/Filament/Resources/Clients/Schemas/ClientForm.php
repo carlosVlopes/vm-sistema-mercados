@@ -54,7 +54,7 @@ class ClientForm
                                     ->required()
                                     ->unique(table: Client::class, column: 'email', ignoreRecord: true)
                                     ->validationMessages([
-                                        'unique' => 'Este e-mail já está em uso por outro cliente.'
+                                        'unique' => 'Este e-mail já está em uso por outro síndico.'
                                     ])
                                     ->maxLength(255),
                                 TextInput::make('percentage')

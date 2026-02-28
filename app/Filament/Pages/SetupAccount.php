@@ -22,6 +22,8 @@ class SetupAccount extends Page implements HasForms
 
     protected static ?string $title = '';
 
+    protected static ?string $slug = 'configuracoes';
+
     protected static bool $shouldRegisterNavigation = false;
 
     public ?array $data = [];

@@ -28,6 +28,8 @@ class ClientResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $slug = 'sindicos';
+
     protected static ?string $modelLabel = 'síndico'; // texto do botao/inserir/edita
 
     public static function form(Schema $schema): Schema

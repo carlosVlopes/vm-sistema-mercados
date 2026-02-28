@@ -32,13 +32,13 @@ class PainelPanelProvider extends PanelProvider
             ->login()
             ->profile()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Amber
             ])
             ->userMenuItems([
-                MenuItem::make('setup-account')
+                MenuItem::make('configuracoes')
                     ->label('Configurações de Taxas')
                     ->icon('heroicon-o-cog')
-                    ->url('setup-account'),
+                    ->url('configuracoes'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
