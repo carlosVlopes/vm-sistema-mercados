@@ -47,14 +47,20 @@ RUN npm ci
 # Copiar resto do projeto
 COPY . .
 
-# Build assets
+# Build assets (IMPORTANTE: antes de otimizar)
 RUN npm run build
+
+# Rodar comandos do composer após copiar tudo
+RUN composer run post-autoload-dump
 
 # Criar diretórios necessários e dar permissões
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
+
+# Criar link simbólico do storage
+RUN php artisan storage:link || true
 
 # Expor porta
 EXPOSE 8080
