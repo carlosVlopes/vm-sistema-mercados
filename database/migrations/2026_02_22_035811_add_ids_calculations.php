@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::table('calculations', function (Blueprint $table) {
             $table->foreignId('client_id')->constrained()->cascadeOnDelete()->after('user_id');
-            $table->foreignId('condominium_id')->constrained('clients_condominiums')->cascadeOnDelete()->after('client_id');
+            $table->unsignedBigInteger('condominium_id');
+            $table->foreign('condominium_id')->references('condominium_id')->on('clients_condominiums')->cascadeOnDelete()->after('client_id');
             $table->string('condominium_name')->nullable()->index()->after('condominium_id');
         });
     }

@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('api_id')->index();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('condominium_id')->constrained('clients_condominiums')->cascadeOnDelete();
+            $table->unsignedBigInteger('condominium_id');
+            $table->foreign('condominium_id')->references('condominium_id')->on('clients_condominiums')->cascadeOnDelete();
             $table->decimal('value', 12, 2)->index();;
             $table->dateTime('sold_at')->index();
             $table->json('payload')->nullable();
