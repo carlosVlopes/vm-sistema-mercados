@@ -11,6 +11,7 @@ use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Illuminate\Contracts\View\View;
 use App\Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -31,8 +32,13 @@ class PainelPanelProvider extends PanelProvider
             ->authGuard('web')
             ->login()
             ->profile()
+            ->brandName('RepassesJá')
+            ->brandLogo(fn (): View => view('filament.brand-logo'))
             ->colors([
-                'primary' => Color::Amber
+                'primary' => Color::hex('#FC6E20'),
+                'warning' => Color::hex('#FFE7D0'),
+                'danger' => Color::Red,
+                'success' => Color::Green,
             ])
             ->userMenuItems([
                 MenuItem::make('configuracoes')
