@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Transfers\Schemas;
 
 use App\Filament\Resources\Transfers\TransferResource;
 use App\Models\Calculation;
-use Filament\Actions\Action;
+use App\Models\Client;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -115,8 +115,7 @@ class TransferForm
                             ]
                         )
                     );
-                })
-                ->visible(fn ($get) => filled($get('calc_id')) && Calculation::find($get('calc_id'))?->status !== 'done'),
+                })->visible(fn ($get) => filled($get('calc_id')) && Calculation::find($get('calc_id'))?->status !== 'done'),
             Hidden::make('condominium_name'),
             Group::make([
                 Section::make('Dados do Síndico')
@@ -172,9 +171,8 @@ class TransferForm
                                     ->prefix('R$')
                                     ->disabled()
                             ]),
-                        Grid::make(1)
+                        Grid::make(2)
                             ->schema([
-                                Hidden::make('light_value')->default(0),
                                 TextInput::make('transfer_value')
                                     ->label(function (callable $get) {
                                         $percentage = $get('disabled_percentage');
@@ -202,27 +200,10 @@ class TransferForm
                                         }
                                     JS))
                                     ->stripCharacters('.')
-                                    ->reactive()
-                                    ->helperText(function (callable $get) {
-
-                                        $light = $get('light_value');
-
-                                        if (!$light) return null;
-
-                                        $lightFloat = (float) str_replace(',', '.', $light);
-
-                                        return new HtmlString('
-                                            <span>Valor da conta de luz: R$ ' . number_format($lightFloat, 2, ',', '.') . '</span>
-                                        ');
-                                    })
-                                    ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp))
-                            ]),
-                        Action::make('teste')
-                            ->label('Adicionar valor de conta de luz')
-                            ->icon('heroicon-m-bolt')
-                            ->schema([
+                                    ->live()
+                                    ->beforeLabel(Icon::make(Heroicon::ArrowTrendingUp)),
                                 TextInput::make('light_value')
-                                    ->label('Valor')
+                                    ->label('Valor da Conta de Luz')
                                     ->prefix('R$')
                                     ->mask(RawJs::make(<<<'JS'
                                         function(input) {
@@ -241,23 +222,36 @@ class TransferForm
                                         }
                                     JS))
                                     ->stripCharacters('.')
-                                    ->required(),
-                            ])
-                            ->action(function (array $data, callable $get, callable $set) {
-                                $parseBrl = fn ($value) => (float) str_replace(',', '.', $value ?? '0');
+                                    ->live()
+                                    ->default(null)
+                                    ->beforeLabel(Icon::make(Heroicon::Bolt))
+                                    ->visible(function (callable $get) {
+                                        $clientId = $get('client_id');
+                                        if (!$clientId) return false;
+                                        return (bool) Client::where('id', $clientId)->value('receives_light');
+                                    }),
+                            ]),
+                        Placeholder::make('total_repasse')
+                            ->hiddenLabel()
+                            ->content(function (callable $get) {
+                                $parseBrl = fn ($value) => (float) str_replace(',', '.', str_replace('.', '', $value ?? '0'));
 
-                                $current = $parseBrl($get('transfer_value'));
-                                $light   = $parseBrl($data['light_value']);
-                                $currentLight = $parseBrl($get('light_value'));
+                                $transfer = $parseBrl($get('transfer_value'));
+                                $light = $parseBrl($get('light_value'));
+                                $total = $transfer + $light;
 
-                                if ($currentLight) {
-                                    $current = $current - $currentLight;
-                                }
+                                $formatted = 'R$ ' . number_format($total, 2, ',', '.');
 
-                                $newValue = $current + $light;
+                                $label = $light > 0
+                                    ? 'Total do Repasse (Repasse + Luz)'
+                                    : 'Total do Repasse';
 
-                                $set('transfer_value', number_format($newValue, 2, ',', '.'));
-                                $set('light_value', $data['light_value']);
+                                return new HtmlString('
+                                    <div style="text-align: center; padding: 12px 0;">
+                                        <span style="color: #6b7280; font-size: 0.875rem;">' . $label . '</span>
+                                        <div style="color: #16a34a; font-size: 1.875rem; font-weight: 700; line-height: 1.2;">' . $formatted . '</div>
+                                    </div>
+                                ');
                             })
                     ])->visible(fn ($get) => optional(Calculation::find($get('calc_id')))->status === 'done'),
                 Section::make('Observações')
@@ -305,8 +299,7 @@ class TransferForm
                 $set('finished', true);
 
                 return null;
-            })
-            ->visible(fn ($get) => filled($get('calc_id'))),
+            })->visible(fn ($get) => filled($get('calc_id'))),
         ];
     }
 }

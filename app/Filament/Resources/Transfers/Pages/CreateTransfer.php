@@ -51,11 +51,15 @@ class CreateTransfer extends CreateRecord
 
         $normalized_transfer_value = str_replace(',', '.', str_replace('.', '', $data['transfer_value']));
         $normalized_gross_total = str_replace(',', '.', str_replace('.', '', $data['gross_total']));
-        $normalized_light_value = str_replace(',', '.', str_replace('.', '', $data['light_value']));
-
         $data['transfer_value'] = Money::of($normalized_transfer_value, 'BRL')->getMinorAmount()->toInt();
         $data['gross_total'] = Money::of($normalized_gross_total, 'BRL')->getMinorAmount()->toInt();
-        $data['light_value'] = Money::of($normalized_light_value, 'BRL')->getMinorAmount()->toInt();
+
+        if (!empty($data['light_value'])) {
+            $normalized_light_value = str_replace(',', '.', str_replace('.', '', $data['light_value']));
+            $data['light_value'] = Money::of($normalized_light_value, 'BRL')->getMinorAmount()->toInt();
+        } else {
+            $data['light_value'] = 0;
+        }
 
         return $data;
     }
