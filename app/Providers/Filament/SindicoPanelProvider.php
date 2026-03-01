@@ -10,6 +10,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use App\Filament\Sindico\Pages\EditProfile;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,8 +29,13 @@ class SindicoPanelProvider extends PanelProvider
             ->authGuard('client')
             ->login()
             ->profile(EditProfile::class)
+            ->brandName('RepassesJá')
+            ->brandLogo(fn (): View => view('filament.brand-logo'))
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#FC6E20'),
+                'warning' => Color::hex('#FFE7D0'),
+                'danger' => Color::Red,
+                'success' => Color::Green,
             ])
             ->discoverResources(in: app_path('Filament/Sindico/Resources'), for: 'App\Filament\Sindico\Resources')
             ->discoverPages(in: app_path('Filament/Sindico/Pages'), for: 'App\Filament\Sindico\Pages')

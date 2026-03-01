@@ -32,6 +32,6 @@ class ClientController extends Controller
         $user->register_token = null;
         $user->save();
 
-        return redirect()->route('filament.sindico.auth.login')->with('success', 'Senha registrada com sucesso. Agora você pode fazer login.');
+        return redirect()->route('registrar-senha.sucesso');
     }
 }

@@ -1027,7 +1027,6 @@
                     <li class="nav-item"><a class="nav-link" href="#paineis">Painéis</a></li>
                     <li class="nav-item"><a class="nav-link" href="#precos">Preços</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                    <a href="#" class="btn btn-nav">Teste grátis 10 dias</a>
                 </ul>
                 <a href="{{ route('filament.painel.auth.login') }}" class="btn btn-nav">Acessar</a>
             </div>
