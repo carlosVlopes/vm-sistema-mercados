@@ -49,17 +49,24 @@ class CreateTransfer extends CreateRecord
     {
         unset($data['condominium_id']);
 
-        $normalized_transfer_value = str_replace(',', '.', str_replace('.', '', $data['transfer_value']));
-        $normalized_gross_total = str_replace(',', '.', str_replace('.', '', $data['gross_total']));
-        $data['transfer_value'] = Money::of($normalized_transfer_value, 'BRL')->getMinorAmount()->toInt();
+        $parseBrl = fn ($value) => str_replace(',', '.', str_replace('.', '', $value));
+
+        $normalized_transfer_value = $parseBrl($data['transfer_value']);
+        $normalized_gross_total = $parseBrl($data['gross_total']);
+
+        $transferMoney = Money::of($normalized_transfer_value, 'BRL');
         $data['gross_total'] = Money::of($normalized_gross_total, 'BRL')->getMinorAmount()->toInt();
 
         if (!empty($data['light_value'])) {
-            $normalized_light_value = str_replace(',', '.', str_replace('.', '', $data['light_value']));
-            $data['light_value'] = Money::of($normalized_light_value, 'BRL')->getMinorAmount()->toInt();
+            $normalized_light_value = $parseBrl($data['light_value']);
+            $lightMoney = Money::of($normalized_light_value, 'BRL');
+            $data['light_value'] = $lightMoney->getMinorAmount()->toInt();
+            $transferMoney = $transferMoney->plus($lightMoney);
         } else {
             $data['light_value'] = 0;
         }
+
+        $data['transfer_value'] = $transferMoney->getMinorAmount()->toInt();
 
         return $data;
     }

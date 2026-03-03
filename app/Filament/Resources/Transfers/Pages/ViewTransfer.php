@@ -56,56 +56,73 @@ class ViewTransfer extends ViewRecord
                         Group::make([
                             Section::make('Resumo Financeiro')
                                 ->schema([
-                                    Grid::make(2)
+                                    Grid::make(3)
                                         ->schema([
-                                            TextEntry::make('transfer_value')
-                                                ->label('Valor do Repasse')
+                                            TextEntry::make('gross_total')
+                                                ->label('Vendas Brutas')
                                                 ->money('BRL', divideBy: 100)
-                                                ->weight(FontWeight::Black)
-                                                ->size(TextSize::Large)
-                                                ->icon('heroicon-m-currency-dollar')
-                                                ->color('success'),
+                                                ->icon('heroicon-m-banknotes')
+                                                ->color('gray'),
+                                            TextEntry::make('percentage_value')
+                                                ->label('Valor da Porcentagem')
+                                                ->getStateUsing(fn ($record) => $record->light_value
+                                                    ? $record->transfer_value - $record->light_value
+                                                    : $record->transfer_value
+                                                )
+                                                ->money('BRL', divideBy: 100)
+                                                ->icon('heroicon-m-receipt-percent')
+                                                ->color('info'),
                                             TextEntry::make('light_value')
-                                                ->label('Valor conta de luz')
+                                                ->label('Conta de Luz')
                                                 ->money('BRL', divideBy: 100)
-                                                ->weight(FontWeight::Black)
-                                                ->size(TextSize::Large)
                                                 ->icon('heroicon-m-bolt')
                                                 ->visible(fn ($record) => $record->light_value)
                                                 ->color('warning'),
                                         ]),
-                                    Actions::make([
-                                        Action::make('view_payment')
-                                            ->label('Ver Comprovante')
-                                            ->icon('heroicon-m-arrow-top-right-on-square')
-                                            ->color('primary')
-                                            ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
-                                            ->openUrlInNewTab()
-                                            ->disabled(fn ($record) => !$record->proof_payment),
-
-                                        Action::make('view_light')
-                                            ->label('Ver Conta de Luz')
-                                            ->icon('heroicon-m-bolt')
-                                            ->color('warning')
-                                            ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
-                                            ->openUrlInNewTab()
-                                            ->visible(fn ($record) => $record->proof_light),
-                                    ])
-                                    ->extraAttributes(['style' => 'margin-top: 3.2rem !important; display: flex;'])
-                                    ->label('Comprovantes')
-                                    ->columnSpan(1),
+                                    Section::make()
+                                        ->schema([
+                                            TextEntry::make('transfer_value')
+                                                ->label('Total do Repasse')
+                                                ->money('BRL', divideBy: 100)
+                                                ->weight(FontWeight::Black)
+                                                ->size(TextSize::Large)
+                                                ->icon('heroicon-m-currency-dollar')
+                                                ->color('success')
+                                                ->extraAttributes(['class' => 'text-center']),
+                                        ])
+                                        ->extraAttributes(['class' => 'bg-success-950/10 ring-success-500/20']),
                                 ]),
-                            ])->columnSpan(2),
-                        Section::make('Observações')
-                            ->schema([
-                                Grid::make(3)
+                                Section::make('Observações')
                                     ->schema([
-                                        TextEntry::make('notes')
-                                            ->hiddenLabel()
-                                            ->placeholder('Sem observações cadastradas.')
-                                            ->columnSpan(2),
-                                    ]),
-                            ])->columnSpanFull(),
+                                        Grid::make(3)
+                                            ->schema([
+                                                TextEntry::make('notes')
+                                                    ->hiddenLabel()
+                                                    ->placeholder('Sem observações cadastradas.')
+                                                    ->columnSpan(2),
+                                            ]),
+                                    ])->columnSpanFull(),
+                                Section::make('Comprovantes')
+                                        ->schema([
+                                            Actions::make([
+                                                Action::make('view_payment')
+                                                    ->label('Ver Comprovante')
+                                                    ->icon('heroicon-m-arrow-top-right-on-square')
+                                                    ->color('primary')
+                                                    ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
+                                                    ->openUrlInNewTab()
+                                                    ->disabled(fn ($record) => !$record->proof_payment),
+
+                                                Action::make('view_light')
+                                                    ->label('Ver Conta de Luz')
+                                                    ->icon('heroicon-m-bolt')
+                                                    ->color('warning')
+                                                    ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
+                                                    ->openUrlInNewTab()
+                                                    ->visible(fn ($record) => $record->proof_light),
+                                            ]),
+                                        ])->columnSpanFull(),
+                            ])->columnSpan(2),
                     ])->columnSpanFull()
             ]);
     }
