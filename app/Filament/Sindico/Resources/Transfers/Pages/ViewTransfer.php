@@ -107,25 +107,25 @@ class ViewTransfer extends ViewRecord
                                             ]),
                                     ])->columnSpanFull(),
                                 Section::make('Comprovantes')
-                                        ->schema([
-                                            Actions::make([
-                                                Action::make('view_payment')
-                                                    ->label('Ver Comprovante')
-                                                    ->icon('heroicon-m-arrow-top-right-on-square')
-                                                    ->color('primary')
-                                                    ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
-                                                    ->openUrlInNewTab()
-                                                    ->visible(fn ($record) => $record->proof_payment),
+                                    ->schema([
+                                        Actions::make([
+                                            Action::make('view_payment')
+                                                ->label('Ver Comprovante')
+                                                ->icon('heroicon-m-arrow-top-right-on-square')
+                                                ->color('primary')
+                                                ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
+                                                ->openUrlInNewTab()
+                                                ->visible(fn ($record) => $record->proof_payment),
 
-                                                Action::make('view_light')
-                                                    ->label('Ver Conta de Luz')
-                                                    ->icon('heroicon-m-bolt')
-                                                    ->color('warning')
-                                                    ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
-                                                    ->openUrlInNewTab()
-                                                    ->visible(fn ($record) => $record->proof_light),
-                                            ]),
-                                        ])->columnSpanFull(),
+                                            Action::make('view_light')
+                                                ->label('Ver Conta de Luz')
+                                                ->icon('heroicon-m-bolt')
+                                                ->color('warning')
+                                                ->url(fn ($record) => $record->proof_light ? Storage::disk('public')->url($record->proof_light) : '#')
+                                                ->openUrlInNewTab()
+                                                ->visible(fn ($record) => $record->proof_light),
+                                        ]),
+                                    ])->columnSpanFull()->visible(fn ($record) => $record->proof_payment || $record->proof_light),
                             ])->columnSpan(2),
                     ])->columnSpanFull()
             ]);
