@@ -71,4 +71,5 @@ CMD chmod -R 775 storage bootstrap/cache && \
     php artisan cache:clear && \
     php artisan config:cache && \
     php artisan migrate --force && \
+    php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --daemon & \
     php artisan serve --host=0.0.0.0 --port=8080
