@@ -39,6 +39,7 @@ class Calculation extends Model
             if (Auth::check()) {
                 $client->user_id = Auth::id();
             }
+            
         });
     }
 }
