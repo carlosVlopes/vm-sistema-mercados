@@ -35,6 +35,11 @@ class ViewTransfer extends ViewRecord
                         Group::make([
                             Section::make('Informações do Condomínio')
                                 ->schema([
+                                    TextEntry::make('id')
+                                        ->label('Repasse')
+                                        ->getStateUsing(fn ($record) => "#{$record->id}")
+                                        ->weight(FontWeight::Bold)
+                                        ->color('gray'),
                                     TextEntry::make('condominium_name')
                                         ->label('Condomínio')
                                         ->weight(FontWeight::Bold)

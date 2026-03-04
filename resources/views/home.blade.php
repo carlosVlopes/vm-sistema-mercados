@@ -206,64 +206,22 @@
             z-index: 1;
         }
 
-        .mockup-card {
-            background: #fff;
+        .video-wrapper {
+            position: relative;
             border-radius: 20px;
-            padding: 1.8rem;
+            overflow: hidden;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.03);
+            aspect-ratio: 16 / 9;
+            background: var(--gray-100);
         }
 
-        .mockup-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .mockup-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .mockup-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            margin-bottom: 0.5rem;
-            background: var(--gray-50);
-            transition: transform 0.2s;
-        }
-
-        .mockup-row:hover {
-            transform: translateX(4px);
-        }
-
-        .mockup-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
-
-        .mockup-amount {
-            font-weight: 700;
-            color: var(--success);
-            font-size: 0.95rem;
-        }
-
-        .mockup-status {
-            font-size: 0.7rem;
-            padding: 0.25rem 0.7rem;
-            border-radius: 50px;
-            font-weight: 600;
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         .floating-card {
@@ -1073,72 +1031,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="floating-card floating-card-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-graph-up-arrow" style="color: var(--primary); font-size: 1.3rem;"></i>
-                                <div>
-                                    <div style="font-weight: 800; font-size: 1.1rem; color: var(--dark);">R$ 48.5k</div>
-                                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 600;">
-                                        <i class="bi bi-arrow-up"></i> +12% este mês
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mockup-card">
-                            <div class="mockup-header">
-                                <div class="mockup-dot" style="background: #f87171;"></div>
-                                <div class="mockup-dot" style="background: #fbbf24;"></div>
-                                <div class="mockup-dot" style="background: #34d399;"></div>
-                                <span style="margin-left: auto; font-size: 0.8rem; font-weight: 600; color: var(--gray-400);">Painel de Repasses</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <div style="font-size: 0.78rem; color: var(--gray-500); font-weight: 500;">Total repassado</div>
-                                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--dark);">R$ 127.430</div>
-                                </div>
-                                <div style="background: rgba(16,185,129,0.1); padding: 0.4rem 0.8rem; border-radius: 8px; color: var(--success); font-weight: 700; font-size: 0.85rem;">
-                                    <i class="bi bi-check-circle-fill"></i> Em dia
-                                </div>
-                            </div>
-                            <div class="mockup-row">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="mockup-avatar" style="background: var(--primary);">CF</div>
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--dark);">Cond. das Flores</div>
-                                        <div style="font-size: 0.75rem; color: var(--gray-500);">Síndico: Maria S.</div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="mockup-amount">R$ 3.200</div>
-                                    <span class="mockup-status" style="background: rgba(16,185,129,0.1); color: var(--success);">Confirmado</span>
-                                </div>
-                            </div>
-                            <div class="mockup-row">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="mockup-avatar" style="background: var(--primary);">CF</div>
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--dark);">Cond. Jardim</div>
-                                        <div style="font-size: 0.75rem; color: var(--gray-500);">Síndico: Maria S.</div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="mockup-amount">R$ 1.500</div>
-                                    <span class="mockup-status" style="background: rgba(16,185,129,0.1); color: var(--success);">Confirmado</span>
-                                </div>
-                            </div>
-                            <div class="mockup-row">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="mockup-avatar" style="background: var(--success);">JM</div>
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--dark);">Cond. Jardim Mar</div>
-                                        <div style="font-size: 0.75rem; color: var(--gray-500);">Síndico: Ana C.</div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="mockup-amount">R$ 2.750</div>
-                                    <span class="mockup-status" style="background: rgba(16,185,129,0.1); color: var(--success);">Confirmado</span>
-                                </div>
-                            </div>
+                        <div class="video-wrapper">
+                            <iframe src="https://www.youtube.com/embed/kPa7bsKwL-c" title="Veja como funciona o RepasseJá" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
                     </div>
                 </div>

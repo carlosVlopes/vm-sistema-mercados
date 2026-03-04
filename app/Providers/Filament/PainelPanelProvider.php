@@ -25,6 +25,7 @@ class PainelPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->globalSearch(false)
             ->sidebarCollapsibleOnDesktop()
             ->default()
             ->id('painel')

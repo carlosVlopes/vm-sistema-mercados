@@ -22,6 +22,11 @@ class TransfersTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->formatStateUsing(fn ($state) => '#'. $state)
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('date')
                     ->label('Data do repasse')
                     ->date()
