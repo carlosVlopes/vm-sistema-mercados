@@ -45,7 +45,8 @@
             background: transparent;
         }
 
-        .navbar.scrolled {
+        .navbar.scrolled,
+        .navbar.menu-open {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -1573,6 +1574,13 @@
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
             navbar.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Toggle navbar background on mobile menu open/close
+        const navMenu = document.getElementById('navMenu');
+        navMenu.addEventListener('show.bs.collapse', () => navbar.classList.add('menu-open'));
+        navMenu.addEventListener('hidden.bs.collapse', () => {
+            if (window.scrollY <= 50) navbar.classList.remove('menu-open');
         });
 
         // Smooth scroll
