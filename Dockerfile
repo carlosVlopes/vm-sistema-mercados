@@ -66,8 +66,10 @@ RUN php artisan storage:link || true
 EXPOSE 8080
 
 # Script de inicialização
-CMD php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache && \
+CMD php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan cache:clear && \
+    php artisan config:cache && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=8080
