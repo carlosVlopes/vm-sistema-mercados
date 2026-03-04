@@ -115,7 +115,7 @@ class ViewTransfer extends ViewRecord
                                                     ->color('primary')
                                                     ->url(fn ($record) => $record->proof_payment ? Storage::disk('public')->url($record->proof_payment) : '#')
                                                     ->openUrlInNewTab()
-                                                    ->disabled(fn ($record) => !$record->proof_payment),
+                                                    ->visible(fn ($record) => !$record->proof_payment),
 
                                                 Action::make('view_light')
                                                     ->label('Ver Conta de Luz')
