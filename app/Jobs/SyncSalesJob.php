@@ -34,13 +34,6 @@ class SyncSalesJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        Log::error('SyncSalesJob falhou definitivamente', [
-            'calc_id' => $this->calc_id,
-            'day' => $this->day,
-            'page' => $this->page,
-            'error' => $exception->getMessage(),
-        ]);
-
         $calc = Calculation::find($this->calc_id);
 
         if ($calc) {
@@ -71,14 +64,6 @@ class SyncSalesJob implements ShouldQueue
         ]);
 
         if (!$response->successful()) {
-            Log::warning('SyncSalesJob: API retornou erro HTTP', [
-                'calc_id' => $this->calc_id,
-                'day' => $this->day,
-                'page' => $this->page,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
             throw new \RuntimeException(
                 "API VM-PAY retornou HTTP {$response->status()} para dia {$this->day}, página {$this->page}"
             );
@@ -87,21 +72,16 @@ class SyncSalesJob implements ShouldQueue
         $data = $response->json();
 
         if (!is_array($data)) {
-            Log::warning('SyncSalesJob: resposta da API não é um array válido', [
-                'calc_id' => $this->calc_id,
-                'day' => $this->day,
-                'page' => $this->page,
-                'response_type' => gettype($data),
-            ]);
-
             throw new \RuntimeException(
                 "API VM-PAY retornou resposta inválida para dia {$this->day}, página {$this->page}"
             );
         }
 
-        // Filtrar apenas vendas com estrutura válida
         $validSales = [];
-        $dayTotal = 0;
+        $pageTotal = 0;
+
+        $cancelledCount = 0;
+        $cancelledTotal = 0;
 
         foreach ($data as $index => $sale) {
             if (!isset($sale['id'])) {
@@ -113,8 +93,17 @@ class SyncSalesJob implements ShouldQueue
                 continue;
             }
 
+            $saleValue = (float) ($sale['value'] ?? 0);
+            $saleStatus = $sale['status'] ?? 'unknown';
+
+            if ($saleStatus !== 'OK') {
+                $cancelledCount++;
+                $cancelledTotal += $saleValue;
+            } else {
+                $pageTotal += $saleValue;
+            }
+
             $validSales[] = $sale;
-            $dayTotal += (float) ($sale['value'] ?? 0);
         }
 
         if (!empty($validSales)) {
@@ -125,26 +114,38 @@ class SyncSalesJob implements ShouldQueue
 
         if (!$hasMore) {
             $calc->increment('processed_days');
-            $calc->increment('total', $dayTotal);
-
             $calc->refresh();
 
             $progress = $calc->total_days > 0
                 ? intval(($calc->processed_days / $calc->total_days) * 100)
                 : 0;
 
-            $calc->update([
-                'progress' => $progress,
-                'status' => $progress >= 100 ? 'done' : 'processing',
-            ]);
+            $isDone = $progress >= 100;
+
+            // Quando todos os dias forem processados, calcula o total real da tabela sales
+            if ($isDone) {
+                $baseQuery = Sale::where('client_id', $this->client_id)
+                    ->where('condominium_id', $this->condominium_id)
+                    ->whereBetween('sold_at', [$calc->period_start, $calc->period_end]);
+
+                $dbTotal = (clone $baseQuery)->where('status', 'OK')->sum('value');
+                $dbTotalAll = (clone $baseQuery)->sum('value');
+                $cancelledTotal = (clone $baseQuery)->where('status', '!=', 'OK')->sum('value');
+
+                $calc->update([
+                    'progress' => 100,
+                    'status' => 'done',
+                    'total' => $dbTotal,
+                ]);
+            } else {
+                $calc->update([
+                    'progress' => $progress,
+                    'status' => 'processing',
+                ]);
+            }
 
             return;
         }
-
-        Log::info('SyncSalesJob: mais de 300 vendas, buscando próxima página', [
-            'day' => $this->day,
-            'next_page' => $this->page + 1,
-        ]);
 
         SyncSalesJob::dispatch(
             $this->calc_id,

@@ -14,6 +14,7 @@ class Sale extends Model
         'client_id',
         'condominium_id',
         'value',
+        'status',
         'sold_at',
         'payload'
     ];
@@ -39,6 +40,7 @@ class Sale extends Model
                 'user_id' => $user_id,
                 'condominium_id' => $condominium_id,
                 'value' => $sale['value'] ?? 0,
+                'status' => $sale['status'] ?? 'unknown',
                 'sold_at' => Carbon::parse($sale['occurred_at'])
                     ->timezone('America/Sao_Paulo'),
                 'payload' => json_encode($sale),
@@ -54,6 +56,7 @@ class Sale extends Model
             'user_id' => $user_id,
             'condominium_id' => $condominium_id,
             'value' => $sale['value'] ?? 0,
+            'status' => $sale['status'] ?? 'unknown',
             'sold_at' => Carbon::parse($sale['occurred_at'])->timezone('America/Sao_Paulo'),
             'payload' => json_encode($sale),
         ], $sales);
@@ -62,7 +65,7 @@ class Sale extends Model
             static::upsert(
                 $chunk,
                 ['api_id', 'client_id'],
-                ['user_id', 'condominium_id', 'value', 'sold_at', 'payload']
+                ['user_id', 'condominium_id', 'value', 'status', 'sold_at', 'payload']
             );
         }
     }
