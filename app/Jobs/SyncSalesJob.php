@@ -19,9 +19,6 @@ class SyncSalesJob implements ShouldQueue
 
     public $maxExceptions = 3;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         protected int $calc_id,
         protected int $client_id,
@@ -41,9 +38,6 @@ class SyncSalesJob implements ShouldQueue
         }
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $calc = Calculation::find($this->calc_id);
@@ -122,7 +116,6 @@ class SyncSalesJob implements ShouldQueue
 
             $isDone = $progress >= 100;
 
-            // Quando todos os dias forem processados, calcula o total real da tabela sales
             if ($isDone) {
                 $baseQuery = Sale::where('client_id', $this->client_id)
                     ->where('condominium_id', $this->condominium_id)

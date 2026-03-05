@@ -2,7 +2,6 @@
 
 namespace App\Filament\Sindico\Widgets;
 
-use App\Models\Client;
 use App\Models\Transfer;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
@@ -20,6 +19,11 @@ class EnergyChart extends ChartWidget
     protected ?string $heading = 'Energia';
 
     protected ?string $maxHeight = '400px';
+
+    public static function canView(): bool
+    {
+        return auth()->user()->receives_light;
+    }
 
     public function filtersSchema(Schema $schema): Schema
     {

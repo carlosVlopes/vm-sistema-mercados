@@ -63,6 +63,7 @@ class ClientForm
                                     ->minValue(0)
                                     ->maxValue(100)
                                     ->required()
+                                    ->default(0)
                                     ->step(0.01),
                                 Toggle::make('receives_light')
                                     ->label('Cliente recebe valor da conta de luz?')

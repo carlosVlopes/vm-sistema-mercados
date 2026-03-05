@@ -85,12 +85,14 @@ class SetupAccount extends Page implements HasForms
                         ->label('Taxa de Máquina (%)')
                         ->numeric()
                         ->required()
+                        ->default('0')
                         ->suffix('%'),
 
                     TextInput::make('taxes_fee')
                         ->label('Taxa de Impostos (%)')
                         ->numeric()
                         ->required()
+                        ->default('0')
                         ->suffix('%'),
                 ]),
             TextInput::make('api_token')
