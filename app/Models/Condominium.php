@@ -13,6 +13,6 @@ class Condominium extends Model
             'clients_condominiums',
             'condominium_id',
             'client_id'
-        );
+        )->withPivot('name');
     }
 }

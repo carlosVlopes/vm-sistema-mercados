@@ -78,26 +78,10 @@ class TransferResource extends Resource
 
     public static function get_client_condominiums($client_id)
     {
-        $apiData = Cache::remember('vm_clients_api', 600, function () {
-
-            $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
-                'access_token' => auth()->user()->api_token,
-            ]);
-
-            return $response->json();
-        });
-
-        $query = \DB::table('clients_condominiums')->where('client_id', '=', $client_id);
-
-        $condominiums_ids = $query
-            ->pluck('condominium_id')
-            ->toArray();
-
-        $ids = array_flip($condominiums_ids);
-
-        return collect($apiData)
-            ->filter(fn ($item) => isset($ids[$item['id']]))
-            ->pluck('name', 'id')
+        return \DB::table('clients_condominiums')
+            ->where('client_id', '=', $client_id)
+            ->whereNotNull('name')
+            ->pluck('name', 'condominium_id')
             ->toArray();
     }
 
@@ -127,38 +111,12 @@ class TransferResource extends Resource
             return [];
         }
 
-        try {
-            $response = Http::timeout(30)->get('https://vmpay.vertitecnologia.com.br/api/v1/clients/' . $condominiumId, [
-                'access_token' => auth()->user()->api_token
-            ]);
-        } catch (\Exception $e) {
-            Log::error('fetch_sales: erro ao buscar condomínio na API', [
-                'condominium_id' => $condominiumId,
-                'error' => $e->getMessage(),
-            ]);
+        $condominiumName = \DB::table('clients_condominiums')
+            ->where('client_id', $clientId)
+            ->where('condominium_id', $condominiumId)
+            ->value('name');
 
-            Notification::make()
-                ->title('Erro de conexão')
-                ->body('Não foi possível conectar à API VM-PAY. Tente novamente.')
-                ->danger()
-                ->send();
-
-            return [];
-        }
-
-        if (!$response->successful()) {
-            Notification::make()
-                ->title('Erro na API')
-                ->body("A API retornou o status {$response->status()}. Verifique seu token de acesso.")
-                ->danger()
-                ->send();
-
-            return [];
-        }
-
-        $condominium = $response->json();
-
-        if (!is_array($condominium) || empty($condominium) || !isset($condominium['name'])) {
+        if (! $condominiumName) {
             Notification::make()
                 ->title('Condomínio não encontrado')
                 ->body('Não foi possível obter os dados do condomínio selecionado.')
@@ -177,7 +135,7 @@ class TransferResource extends Resource
             'processed_days' => 0,
             'client_id' => $clientId,
             'condominium_id' => $condominiumId,
-            'condominium_name' => $condominium['name']
+            'condominium_name' => $condominiumName
         ]);
 
         $period = CarbonPeriod::create(

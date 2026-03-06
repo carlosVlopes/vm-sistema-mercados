@@ -75,7 +75,13 @@ class CreateClient extends CreateRecord
     {
         $ids = $this->data['condominiums_ids'] ?? [];
 
-        $this->record->condominiums()->sync($ids);
+        $apiData = collect(\Illuminate\Support\Facades\Cache::get('vm_clients_api', []));
+        $syncData = collect($ids)->mapWithKeys(function ($id) use ($apiData) {
+            $name = $apiData->firstWhere('id', $id)['name'] ?? null;
+            return [$id => ['name' => $name]];
+        })->toArray();
+
+        $this->record->condominiums()->sync($syncData);
 
         $this->registerUrl = route('registrar-senha', [
             'token' => $this->record->register_token

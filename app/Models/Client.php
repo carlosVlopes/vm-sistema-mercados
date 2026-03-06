@@ -34,7 +34,7 @@ class Client extends Authenticatable implements FilamentUser
             'clients_condominiums',
             'client_id',
             'condominium_id'
-        );
+        )->withPivot('name');
     }
 
     public function transfers()

@@ -23,12 +23,11 @@ class TransfersChart extends ChartWidget
 
     public function filtersSchema(Schema $schema): Schema
     {
-        $condominiums = Transfer::query()
-            ->whereNotNull('condominium_name')
+        $condominiums = \DB::table('clients_condominiums')
             ->where('client_id', auth()->id())
-            ->distinct()
-            ->orderBy('condominium_name')
-            ->pluck('condominium_name', 'condominium_name')
+            ->whereNotNull('name')
+            ->orderBy('name')
+            ->pluck('name', 'name')
             ->toArray();
 
         return $schema->components([

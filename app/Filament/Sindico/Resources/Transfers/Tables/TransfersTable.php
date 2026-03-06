@@ -61,10 +61,11 @@ class TransfersTable
                 SelectFilter::make('condominium_name')
                     ->label('Condomínio')
                     ->options(
-                        Transfer::query()
+                        \DB::table('clients_condominiums')
                             ->where('client_id', auth()->id())
-                            ->distinct()
-                            ->pluck('condominium_name', 'condominium_name')
+                            ->whereNotNull('name')
+                            ->orderBy('name')
+                            ->pluck('name', 'name')
                             ->toArray()
                     ),
                 Filter::make('date')
