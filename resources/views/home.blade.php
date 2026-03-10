@@ -987,7 +987,7 @@
                     <li class="nav-item"><a class="nav-link" href="#precos">Preços</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
                 </ul>
-                <a href="{{ route('filament.painel.auth.login') }}" class="btn btn-nav">Acessar</a>
+                <a href="{{ route('auth.login') }}" class="btn btn-nav">Acessar</a>
             </div>
         </div>
     </nav>
