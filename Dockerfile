@@ -66,6 +66,7 @@ RUN php artisan storage:link || true
 EXPOSE 8080
 
 # Script de inicialização
+#teste
 CMD chmod -R 775 storage bootstrap/cache && \
     php artisan config:clear && \
     php artisan cache:clear && \
