@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Auth;
 
 class Transfer extends Model
 {
+    protected $casts = [
+        'proof_files' => 'array',
+    ];
+
     protected $fillable = [
         'client_id',
         'condominium_name',
@@ -16,8 +20,7 @@ class Transfer extends Model
         'transfer_value',
         'gross_total',
         'light_value',
-        'proof_payment',
-        'proof_light',
+        'proof_files',
         'user_id',
         'notes'
     ];

@@ -264,21 +264,16 @@ class TransferForm
                     ])->visible(fn ($get) => optional(Calculation::find($get('calc_id')))->status === 'done'),
                 Section::make('Comprovantes')
                     ->icon(Icon::make(Heroicon::Photo))
-                    ->description('Comprovantes relacionados a este repasse.')
+                    ->description('Anexe até 5 comprovantes relacionados a este repasse.')
                     ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                FileUpload::make('proof_payment')
-                                    ->label('Comprovante de transferência')
-                                    ->acceptedFileTypes(['application/pdf', 'application/image/jpeg', 'application/image/png'])
-                                    ->disk('public')
-                                    ->visibility('public'),
-                                FileUpload::make('proof_light')
-                                    ->label('Comprovante de luz')
-                                    ->acceptedFileTypes(['application/pdf', 'application/image/jpeg', 'application/image/png'])
-                                    ->disk('public')
-                                    ->visibility('public')
-                            ]),
+                        FileUpload::make('proof_files')
+                            ->label('Comprovantes')
+                            ->multiple()
+                            ->maxFiles(5)
+                            ->reorderable()
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                            ->disk('public')
+                            ->visibility('public'),
                     ])->visible(fn ($get) => optional(Calculation::find($get('calc_id')))->status === 'done')
             ])
             ->reactive()
