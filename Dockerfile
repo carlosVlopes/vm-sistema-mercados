@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nodejs \
-    npm
+    npm \
+    supervisor
 
 # Instalar extensões PHP necessárias
 RUN docker-php-ext-configure intl && \
@@ -62,14 +63,14 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 # Criar link simbólico do storage
 RUN php artisan storage:link || true
 
+# Copiar configuração do Supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copiar script de entrypoint
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expor porta
 EXPOSE 8080
 
-# Script de inicialização
-CMD chmod -R 775 storage bootstrap/cache && \
-    php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan config:cache && \
-    php artisan migrate --force && \
-    php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --daemon & \
-    php artisan serve --host=0.0.0.0 --port=8080
+ENTRYPOINT ["/entrypoint.sh"]
