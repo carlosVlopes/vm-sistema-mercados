@@ -25,6 +25,9 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'phonenumer',
         'document',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'subscription_status',
     ];
 
     /**
@@ -58,5 +61,10 @@ class User extends Authenticatable implements FilamentUser
         return filled($this->machine_fee)
             && filled($this->taxes_fee)
             && filled($this->api_token);
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return in_array($this->subscription_status, ['active', 'past_due']);
     }
 }

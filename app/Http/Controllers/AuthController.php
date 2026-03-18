@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Stripe\StripeClient;
 
 class AuthController extends Controller
 {
@@ -51,16 +53,21 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        $pendingUser = User::where('email', $request->email)
+            ->where('subscription_status', 'pending')
+            ->first();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($pendingUser?->id),
+            ],
             'document' => ['required', 'string', 'max:18'],
             'phonenumer' => ['required', 'string', 'max:15'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'card_number' => ['required', 'string'],
-            'card_name' => ['required', 'string'],
-            'card_expiry' => ['required', 'string'],
-            'card_cvv' => ['required', 'string'],
         ], [
             'name.required' => 'O nome é obrigatório.',
             'email.required' => 'O e-mail é obrigatório.',
@@ -71,24 +78,168 @@ class AuthController extends Controller
             'password.required' => 'A senha é obrigatória.',
             'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
             'password.confirmed' => 'As senhas não conferem.',
-            'card_number.required' => 'O número do cartão é obrigatório.',
-            'card_name.required' => 'O nome no cartão é obrigatório.',
-            'card_expiry.required' => 'A validade é obrigatória.',
-            'card_cvv.required' => 'O CVV é obrigatório.',
         ]);
 
-        // TODO: Processar pagamento com gateway antes de criar o usuário
+        $stripe = new StripeClient(config('services.stripe.secret'));
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'document' => $validated['document'],
-            'phonenumer' => $validated['phonenumer'],
-            'password' => Hash::make($validated['password']),
+        if ($pendingUser) {
+            $pendingUser->update([
+                'name' => $validated['name'],
+                'document' => $validated['document'],
+                'phonenumer' => $validated['phonenumer'],
+                'password' => Hash::make($validated['password']),
+            ]);
+            $user = $pendingUser;
+
+            if (! $user->stripe_customer_id) {
+                $customer = $stripe->customers->create([
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'metadata' => ['user_id' => $user->id],
+                ]);
+                $user->update(['stripe_customer_id' => $customer->id]);
+            }
+        } else {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'document' => $validated['document'],
+                'phonenumer' => $validated['phonenumer'],
+                'password' => Hash::make($validated['password']),
+                'subscription_status' => 'pending',
+            ]);
+
+            $customer = $stripe->customers->create([
+                'email' => $user->email,
+                'name' => $user->name,
+                'metadata' => ['user_id' => $user->id],
+            ]);
+            $user->update(['stripe_customer_id' => $customer->id]);
+        }
+
+        $request->session()->put('pending_user_id', $user->id);
+
+        return redirect()->route('auth.register.checkout');
+    }
+
+    public function showCheckout(Request $request)
+    {
+        $userId = $request->session()->get('pending_user_id');
+
+        if (! $userId) {
+            return redirect()->route('auth.register')
+                ->withErrors(['email' => 'Sessão expirada. Por favor, preencha seus dados novamente.']);
+        }
+
+        $user = User::find($userId);
+
+        if (! $user || $user->hasActiveSubscription()) {
+            $request->session()->forget('pending_user_id');
+
+            if ($user?->hasActiveSubscription()) {
+                Auth::login($user);
+
+                return redirect()->route('filament.painel.pages.dashboard');
+            }
+
+            return redirect()->route('auth.register');
+        }
+
+        $stripe = new StripeClient(config('services.stripe.secret'));
+
+        $checkoutSession = $stripe->checkout->sessions->create([
+            'ui_mode' => 'embedded',
+            'customer' => $user->stripe_customer_id,
+            'client_reference_id' => (string) $user->id,
+            'line_items' => [[
+                'price' => config('services.stripe.price_id'),
+                'quantity' => 1,
+            ]],
+            'mode' => 'subscription',
+            'return_url' => route('auth.register.return').'?session_id={CHECKOUT_SESSION_ID}',
         ]);
 
-        Auth::login($user);
+        return view('auth.register-checkout', [
+            'clientSecret' => $checkoutSession->client_secret,
+            'stripePublishableKey' => config('services.stripe.publishable'),
+        ]);
+    }
 
-        return redirect()->route('filament.painel.pages.dashboard');
+    public function checkoutReturn(Request $request)
+    {
+        $sessionId = $request->query('session_id');
+
+        if (! $sessionId) {
+            return redirect()->route('auth.register');
+        }
+
+        $stripe = new StripeClient(config('services.stripe.secret'));
+        $session = $stripe->checkout->sessions->retrieve($sessionId);
+
+        if ($session->status === 'complete') {
+            $user = User::find($session->client_reference_id);
+
+            if ($user && ! $user->hasActiveSubscription()) {
+                $user->update([
+                    'stripe_subscription_id' => $session->subscription,
+                    'subscription_status' => 'active',
+                ]);
+            }
+
+            if ($user) {
+                $request->session()->forget('pending_user_id');
+                Auth::login($user);
+
+                return redirect()->route('filament.painel.pages.dashboard');
+            }
+        }
+
+        if ($session->status === 'open') {
+            return redirect()->route('auth.register.checkout');
+        }
+
+        return redirect()->route('auth.register')
+            ->withErrors(['email' => 'Sua sessão de pagamento expirou. Tente novamente.']);
+    }
+
+    public function reactivateSubscription(Request $request)
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return redirect()->route('auth.login');
+        }
+
+        if ($user->hasActiveSubscription()) {
+            return redirect()->route('filament.painel.pages.dashboard');
+        }
+
+        $stripe = new StripeClient(config('services.stripe.secret'));
+
+        if (! $user->stripe_customer_id) {
+            $customer = $stripe->customers->create([
+                'email' => $user->email,
+                'name' => $user->name,
+                'metadata' => ['user_id' => $user->id],
+            ]);
+            $user->update(['stripe_customer_id' => $customer->id]);
+        }
+
+        $checkoutSession = $stripe->checkout->sessions->create([
+            'ui_mode' => 'embedded',
+            'customer' => $user->stripe_customer_id,
+            'client_reference_id' => (string) $user->id,
+            'line_items' => [[
+                'price' => config('services.stripe.price_id'),
+                'quantity' => 1,
+            ]],
+            'mode' => 'subscription',
+            'return_url' => route('auth.register.return').'?session_id={CHECKOUT_SESSION_ID}',
+        ]);
+
+        return view('auth.register-checkout', [
+            'clientSecret' => $checkoutSession->client_secret,
+            'stripePublishableKey' => config('services.stripe.publishable'),
+        ]);
     }
 }
