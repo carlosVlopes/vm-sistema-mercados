@@ -7,7 +7,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Http;
@@ -108,11 +107,7 @@ class SetupAccount extends Page implements HasForms
 
         return $schema
             ->statePath('data')
-            ->components([
-                Section::make('Configurações de Taxas e API')
-                    ->description('Configure a taxa de máquina, impostos e o token da API.')
-                    ->schema($fields),
-            ]);
+            ->components($fields);
     }
 
     public function save(): void
