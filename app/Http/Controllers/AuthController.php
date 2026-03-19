@@ -45,6 +45,10 @@ class AuthController extends Controller
     public function showRegister()
     {
         if (Auth::check()) {
+            if (! Auth::user()->hasActiveSubscription()) {
+                return redirect()->route('auth.register.checkout');
+            }
+
             return redirect()->route('filament.painel.pages.dashboard');
         }
 
@@ -65,7 +69,7 @@ class AuthController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($pendingUser?->id),
             ],
-            'document' => ['required', 'string', 'max:18'],
+            'document' => ['required', 'string', 'max:18', Rule::unique('users', 'document')->ignore($pendingUser?->id)],
             'phonenumer' => ['required', 'string', 'max:15'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
@@ -74,6 +78,7 @@ class AuthController extends Controller
             'email.email' => 'Informe um e-mail válido.',
             'email.unique' => 'Este e-mail já está em uso.',
             'document.required' => 'O CPF/CNPJ é obrigatório.',
+            'document.unique' => 'Este CPF ou CNPJ já está em uso.',
             'phonenumer.required' => 'O celular é obrigatório.',
             'password.required' => 'A senha é obrigatória.',
             'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
@@ -125,6 +130,10 @@ class AuthController extends Controller
     public function showCheckout(Request $request)
     {
         $userId = $request->session()->get('pending_user_id');
+
+        if (! $userId && Auth::check() && ! Auth::user()->hasActiveSubscription()) {
+            $userId = Auth::id();
+        }
 
         if (! $userId) {
             return redirect()->route('auth.register')

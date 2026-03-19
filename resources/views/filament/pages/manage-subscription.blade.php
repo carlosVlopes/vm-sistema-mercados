@@ -22,7 +22,7 @@
 
                     @if(isset($subscription['amount']))
                         <div style="margin-top: 0.75rem;">
-                            <span style="font-size: 1.5rem; font-weight: 800; color: var(--fi-body-text-color, #FC6E20);">
+                            <span style="font-size: 1.5rem; font-weight: 800;">
                                 R$ {{ number_format($subscription['amount'] / 100, 2, ',', '.') }}
                             </span>
                             <span style="font-size: 0.875rem; font-weight: 500; color: #9ca3af;">/mês</span>
@@ -50,7 +50,7 @@
                     </div>
                     <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">Início do Período</span>
                 </div>
-                <p style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--fi-body-text-color, #FC6E20);">
+                <p style="font-size: 1rem; font-weight: 600; margin: 0;">
                     {{ \Carbon\Carbon::createFromTimestamp($subscription['current_period_start'])->format('d/m/Y') }}
                 </p>
             </x-filament::section>
@@ -65,7 +65,7 @@
                         {{ ($subscription['cancel_at_period_end'] ?? false) ? 'Acesso Até' : 'Próxima Cobrança' }}
                     </span>
                 </div>
-                <p style="font-size: 1rem; font-weight: 600; margin: 0; color: {{ ($subscription['cancel_at_period_end'] ?? false) ? '#dc2626' : 'var(--fi-body-text-color, #FC6E20)' }};">
+                <p style="font-size: 1rem; font-weight: 600; margin: 0; color: {{ ($subscription['cancel_at_period_end'] ?? false) ? '#dc2626' : '' }};">
                     {{ \Carbon\Carbon::createFromTimestamp($subscription['current_period_end'])->format('d/m/Y') }}
                 </p>
             </x-filament::section>

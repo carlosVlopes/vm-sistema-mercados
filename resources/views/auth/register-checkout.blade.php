@@ -50,7 +50,7 @@
                         <p class="text-xs text-gray-500">Acesso completo ao sistema</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-lg font-bold" style="color: #FC6E20;">R$ 49,90</p>
+                        <p class="text-lg font-bold" style="color: #FC6E20;">R$ 45,00</p>
                         <p class="text-xs text-gray-500">/mês</p>
                     </div>
                 </div>

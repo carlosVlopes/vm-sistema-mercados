@@ -52,6 +52,12 @@
                     </x-filament::section>
                 @else
                     <x-filament::section>
+                        <x-slot name="heading">
+                            Configurações de Taxas e API
+                        </x-slot>
+                        <x-slot name="description">
+                            Configure a taxa de máquina, impostos e o token da API.
+                        </x-slot>
                         {{ $this->form }}
 
                         <x-slot name="footer">

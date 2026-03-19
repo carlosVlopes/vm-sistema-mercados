@@ -68,11 +68,12 @@ class TransfersTable
             ->filters([
                 SelectFilter::make('client')
                     ->label('Cliente')
-                    ->relationship('client', 'name'),
+                    ->relationship('client', 'name', fn ($query) => $query->where('user_id', auth()->id())),
                 SelectFilter::make('condominium_name')
                     ->label('Condomínio')
                     ->options(
                         Transfer::query()
+                            ->where('user_id', auth()->id())
                             ->distinct()
                             ->pluck('condominium_name', 'condominium_name')
                             ->toArray()

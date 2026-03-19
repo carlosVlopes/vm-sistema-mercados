@@ -41,7 +41,7 @@ class TransferForm
                         ->default(fn () => auth()->id()),
                     Select::make('client_id')
                         ->label('Síndico')
-                        ->relationship('client', 'name')
+                        ->relationship('client', 'name', fn ($query) => $query->where('user_id', auth()->id()))
                         ->searchable(['name', 'email'])
                         ->live()
                         ->afterStateUpdated(fn ($set) => $set('condominium_id', null))
