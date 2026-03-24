@@ -61,13 +61,13 @@ class ViewTransfer extends ViewRecord
                                 ->schema([
                                     Grid::make(3)
                                         ->schema([
-                                            TextEntry::make('gross_total')
-                                                ->label('Vendas Brutas')
+                                            TextEntry::make('net_total')
+                                                ->label('Vendas Líquidas')
                                                 ->money('BRL', divideBy: 100)
                                                 ->icon('heroicon-m-banknotes')
                                                 ->color('gray'),
                                             TextEntry::make('percentage_value')
-                                                ->label('Valor da Porcentagem')
+                                                ->label('Repasse sobre as vendas')
                                                 ->getStateUsing(fn ($record) => $record->light_value
                                                     ? $record->transfer_value - $record->light_value
                                                     : $record->transfer_value
@@ -76,7 +76,7 @@ class ViewTransfer extends ViewRecord
                                                 ->icon('heroicon-m-receipt-percent')
                                                 ->color('info'),
                                             TextEntry::make('light_value')
-                                                ->label('Conta de Luz')
+                                                ->label('Repasse energia')
                                                 ->money('BRL', divideBy: 100)
                                                 ->icon('heroicon-m-bolt')
                                                 ->visible(fn ($record) => $record->light_value)

@@ -53,9 +53,11 @@ class CreateTransfer extends CreateRecord
 
         $normalized_transfer_value = $parseBrl($data['transfer_value']);
         $normalized_gross_total = $parseBrl($data['gross_total']);
+        $normalized_net_total = $parseBrl($data['net_total']);
 
         $transferMoney = Money::of($normalized_transfer_value, 'BRL');
         $data['gross_total'] = Money::of($normalized_gross_total, 'BRL')->getMinorAmount()->toInt();
+        $data['net_total'] = Money::of($normalized_net_total, 'BRL')->getMinorAmount()->toInt();
 
         if (!empty($data['light_value'])) {
             $normalized_light_value = $parseBrl($data['light_value']);

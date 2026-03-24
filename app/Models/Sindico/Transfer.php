@@ -21,6 +21,7 @@ class Transfer extends Model
         'period_end',
         'transfer_value',
         'gross_total',
+        'net_total',
         'light_value',
         'proof_files',
         'user_id'
