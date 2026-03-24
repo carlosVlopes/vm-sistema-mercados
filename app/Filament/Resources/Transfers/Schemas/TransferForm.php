@@ -170,6 +170,7 @@ class TransferForm
                                     ->label('Total Líquido')
                                     ->prefix('R$')
                                     ->disabled()
+                                    ->dehydrated()
                             ]),
                         Grid::make(2)
                             ->schema([
