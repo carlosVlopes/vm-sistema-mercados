@@ -26,3 +26,20 @@ Route::get('/registrar-senha/sucesso', fn () => view('client-password-success'))
 Route::get('/registrar-senha/{token}', [ClientController::class, 'registerPassword'])->name('registrar-senha');
 
 Route::post('/registrar-senha', [ClientController::class, 'storePassword'])->name('registrar-senha.store');
+
+Route::get('/backup-db', function () {
+    $file = storage_path('app/backup.sql');
+
+    $command = sprintf(
+        'mysqldump -h %s -u %s -p%s %s > %s',
+        env('DB_HOST'),
+        env('DB_USERNAME'),
+        env('DB_PASSWORD'),
+        env('DB_DATABASE'),
+        $file
+    );
+
+    exec($command);
+
+    return response()->download($file);
+});
