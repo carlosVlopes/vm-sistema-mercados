@@ -9,20 +9,29 @@ class ClientController extends Controller
 {
     public function registerPassword($token)
     {
-        $user = Client::where('register_token', $token)->first();
+        $hash = hash('sha256', $token);
+
+        $user = Client::where('register_token', $hash)
+            ->where('register_token_expires_at', '>', now())
+            ->first();
 
         if (!$user) {
             return redirect()->route('filament.sindico.auth.login')->withErrors(['token' => 'Token inválido ou expirado.']);
         }
 
         return view('client-password-register', ['token' => $token, 'user' => $user]);
-    }    
+    }
 
     public function storePassword(ClientPasswordRegister $request)
     {
         $request->only(['token', 'password', 'password_confirm']);
 
-        $user = Client::where('register_token', $request->token)->where('password', null)->first();
+        $hash = hash('sha256', $request->token);
+
+        $user = Client::where('register_token', $hash)
+            ->where('register_token_expires_at', '>', now())
+            ->whereNull('password')
+            ->first();
 
         if (!$user) {
             return redirect()->back()->withErrors(['token' => 'Token inválido ou expirado.']);
@@ -30,6 +39,7 @@ class ClientController extends Controller
 
         $user->password = bcrypt($request->password);
         $user->register_token = null;
+        $user->register_token_expires_at = null;
         $user->save();
 
         return redirect()->route('registrar-senha.sucesso');

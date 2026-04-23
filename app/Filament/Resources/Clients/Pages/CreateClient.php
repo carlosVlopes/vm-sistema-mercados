@@ -16,6 +16,8 @@ class CreateClient extends CreateRecord
 
     public ?string $registerUrl = null;
 
+    public ?string $plainToken = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -66,7 +68,11 @@ class CreateClient extends CreateRecord
     {
         $data['user_id'] = auth()->id();
 
-        $data['register_token'] = hash_hmac('sha256', Str::random(60), $data['name'] . $data['email']);
+        $plainToken = Str::random(64);
+        $data['register_token'] = hash('sha256', $plainToken);
+        $data['register_token_expires_at'] = now()->addHours(72);
+
+        $this->plainToken = $plainToken;
 
         return $data;
     }
@@ -84,7 +90,7 @@ class CreateClient extends CreateRecord
         $this->record->condominiums()->sync($syncData);
 
         $this->registerUrl = route('registrar-senha', [
-            'token' => $this->record->register_token
+            'token' => $this->plainToken
         ]);
 
         Notification::make()

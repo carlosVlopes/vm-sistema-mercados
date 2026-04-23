@@ -17,10 +17,23 @@ class AuthController extends Controller
             return redirect()->route('filament.painel.pages.dashboard');
         }
 
+        if (Auth::guard('client')->check()) {
+            return redirect()->route('filament.sindico.pages.dashboard');
+        }
+
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function showLoginMercado()
+    {
+        if (Auth::check()) {
+            return redirect()->route('filament.painel.pages.dashboard');
+        }
+
+        return view('auth.login-mercado');
+    }
+
+    public function loginMercado(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -35,6 +48,37 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             return redirect()->intended(route('filament.painel.pages.dashboard'));
+        }
+
+        return back()->withErrors([
+            'email' => 'Credenciais inválidas. Verifique seu e-mail e senha.',
+        ])->onlyInput('email');
+    }
+
+    public function showLoginSindico()
+    {
+        if (Auth::guard('client')->check()) {
+            return redirect()->route('filament.sindico.pages.dashboard');
+        }
+
+        return view('auth.login-sindico');
+    }
+
+    public function loginSindico(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ], [
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Informe um e-mail válido.',
+            'password.required' => 'A senha é obrigatória.',
+        ]);
+
+        if (Auth::guard('client')->attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('filament.sindico.pages.dashboard'));
         }
 
         return back()->withErrors([
@@ -57,9 +101,10 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $pendingUser = User::where('email', $request->email)
-            ->where('subscription_status', 'pending')
-            ->first();
+        $pendingUserId = $request->session()->get('pending_user_id');
+        $pendingUser = $pendingUserId
+            ? User::where('id', $pendingUserId)->where('subscription_status', 'pending')->first()
+            : null;
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -188,19 +233,30 @@ class AuthController extends Controller
         if ($session->status === 'complete') {
             $user = User::find($session->client_reference_id);
 
-            if ($user && ! $user->hasActiveSubscription()) {
+            if (! $user) {
+                return redirect()->route('auth.register')
+                    ->withErrors(['email' => 'Usuário não encontrado.']);
+            }
+
+            if (! $user->hasActiveSubscription()) {
                 $user->update([
                     'stripe_subscription_id' => $session->subscription,
                     'subscription_status' => 'active',
                 ]);
             }
 
-            if ($user) {
+            $pendingUserId = $request->session()->get('pending_user_id');
+
+            if ((int) $pendingUserId === (int) $user->id) {
                 $request->session()->forget('pending_user_id');
                 Auth::login($user);
+                $request->session()->regenerate();
 
                 return redirect()->route('filament.painel.pages.dashboard');
             }
+
+            return redirect()->route('auth.login.mercado')
+                ->with('success', 'Pagamento confirmado! Faça login para acessar o painel.');
         }
 
         if ($session->status === 'open') {

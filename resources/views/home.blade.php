@@ -64,6 +64,16 @@
             color: var(--accent);
         }
 
+        .navbar-brand > span {
+            font-size: 1.75rem !important;
+            gap: 8px !important;
+        }
+
+        .navbar-brand > span svg {
+            width: 32px !important;
+            height: 32px !important;
+        }
+
         .nav-link {
             font-weight: 500;
             color: var(--gray-600) !important;
@@ -973,7 +983,7 @@
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="bi bi-arrow-left-right"></i> RepassesJá
+                @include('filament.brand-logo')
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
                 <span class="navbar-toggler-icon"></span>

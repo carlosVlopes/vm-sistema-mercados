@@ -14,8 +14,11 @@ class LogoutController
 
         auth()->guard($guard)->logout();
 
+        session()->invalidate();
         session()->regenerateToken();
 
-        return redirect()->to($panel->getLoginUrl());
+        $route = $guard === 'client' ? 'auth.login.sindico' : 'auth.login.mercado';
+
+        return redirect()->route($route);
     }
 }

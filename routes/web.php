@@ -10,9 +10,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
-Route::post('/login', [AuthController::class, 'login'])->name('auth.login.submit');
+
+Route::get('/login/mercado', [AuthController::class, 'showLoginMercado'])->name('auth.login.mercado');
+Route::post('/login/mercado', [AuthController::class, 'loginMercado'])->name('auth.login.mercado.submit')->middleware('throttle:6,1');
+
+Route::get('/login/sindico', [AuthController::class, 'showLoginSindico'])->name('auth.login.sindico');
+Route::post('/login/sindico', [AuthController::class, 'loginSindico'])->name('auth.login.sindico.submit')->middleware('throttle:6,1');
 Route::get('/registrar', [AuthController::class, 'showRegister'])->name('auth.register');
-Route::post('/registrar', [AuthController::class, 'register'])->name('auth.register.submit');
+Route::post('/registrar', [AuthController::class, 'register'])->name('auth.register.submit')->middleware('throttle:6,1');
 Route::get('/registrar/pagamento', [AuthController::class, 'showCheckout'])->name('auth.register.checkout');
 Route::get('/registrar/retorno', [AuthController::class, 'checkoutReturn'])->name('auth.register.return');
 
@@ -25,21 +30,4 @@ Route::get('/registrar-senha/sucesso', fn () => view('client-password-success'))
 
 Route::get('/registrar-senha/{token}', [ClientController::class, 'registerPassword'])->name('registrar-senha');
 
-Route::post('/registrar-senha', [ClientController::class, 'storePassword'])->name('registrar-senha.store');
-
-Route::get('/backup-db', function () {
-    $file = storage_path('app/backup.sql');
-
-    $command = sprintf(
-        'mysqldump -h %s -u %s -p%s %s > %s',
-        env('DB_HOST'),
-        env('DB_USERNAME'),
-        env('DB_PASSWORD'),
-        env('DB_DATABASE'),
-        $file
-    );
-
-    exec($command);
-
-    return response()->download($file);
-});
+Route::post('/registrar-senha', [ClientController::class, 'storePassword'])->name('registrar-senha.store')->middleware('throttle:6,1');

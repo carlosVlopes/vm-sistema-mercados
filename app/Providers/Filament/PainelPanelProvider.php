@@ -3,8 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureActiveSubscription;
+use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\SetUserSettings;
-use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -75,7 +75,7 @@ class PainelPanelProvider extends PanelProvider
                 SetUserSettings::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                FilamentAuthenticate::class,
             ]);
     }
 }

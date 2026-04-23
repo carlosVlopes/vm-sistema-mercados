@@ -48,6 +48,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'password' => 'hashed',
+            'api_token' => 'encrypted',
         ];
     }
 

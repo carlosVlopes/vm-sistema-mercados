@@ -42,7 +42,7 @@
             </div>
 
             <a
-                href="{{ route('filament.sindico.auth.login') }}"
+                href="{{ route('auth.login.sindico') }}"
                 class="fi-btn block w-full text-center rounded-lg py-2.5 text-sm font-semibold text-white transition-colors"
                 style="background-color: #FC6E20; text-decoration: none;"
             >
@@ -61,7 +61,7 @@
             el.textContent = seconds;
             if (seconds <= 0) {
                 clearInterval(timer);
-                window.location.href = '{{ route('filament.sindico.auth.login') }}';
+                window.location.href = '{{ route('auth.login.sindico') }}';
             }
         }, 1000);
     </script>

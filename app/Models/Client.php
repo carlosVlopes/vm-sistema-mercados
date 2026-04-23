@@ -16,7 +16,8 @@ class Client extends Authenticatable implements FilamentUser
         'password',
         'percentage',
         'receives_light',
-        'register_token'
+        'register_token',
+        'register_token_expires_at',
     ];
 
     protected $hidden = [
@@ -25,6 +26,8 @@ class Client extends Authenticatable implements FilamentUser
 
     protected $casts = [
         'condominiums_ids' => 'array', // Evita o erro de conversão
+        'register_token_expires_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     public function condominiums()

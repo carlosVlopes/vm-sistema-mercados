@@ -20,8 +20,16 @@ class EnsureActiveSubscription
             return $next($request);
         }
 
-        if ($request->routeIs('filament.painel.pages.configuracoes')
-            || $request->routeIs('filament.painel.pages.assinatura')) {
+        if ($request->routeIs(
+            'filament.painel.pages.configuracoes',
+            'filament.painel.pages.assinatura',
+            'filament.painel.auth.logout',
+            'auth.login.mercado',
+            'assinatura.inativa',
+            'assinatura.reativar',
+            'auth.register.return',
+            'stripe.webhook',
+        )) {
             return $next($request);
         }
 
