@@ -272,7 +272,7 @@
         Síndico
       </div>
       <h1>Acesse seu painel</h1>
-      <p class="subtitle">Entre com suas credenciais para gerenciar o condomínio</p>
+      <p class="subtitle">Entre com suas credenciais para ver seus repasses</p>
     </div>
 
     <div class="divider"></div>

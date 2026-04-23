@@ -210,7 +210,7 @@
         </div>
         <div class="option-text">
           <strong>Síndico</strong>
-          <span>Acesse o painel de gestão do condomínio</span>
+          <span>Acesse o painel para ver seus repasses</span>
         </div>
         <svg class="option-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

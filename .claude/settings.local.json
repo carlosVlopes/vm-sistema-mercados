@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $app = require '\\\\''bootstrap/app.php'\\\\''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); echo view\\('\\\\''auth.login'\\\\''\\)->render\\(\\) ? '\\\\''OK choice'\\\\'' : '\\\\''FAIL'\\\\''; echo PHP_EOL; echo view\\('\\\\''auth.login-mercado'\\\\''\\)->render\\(\\) ? '\\\\''OK mercado'\\\\'' : '\\\\''FAIL'\\\\''; echo PHP_EOL; echo view\\('\\\\''auth.login-sindico'\\\\''\\)->render\\(\\) ? '\\\\''OK sindico'\\\\'' : '\\\\''FAIL'\\\\''; echo PHP_EOL;')"
     ]
   }
 }
