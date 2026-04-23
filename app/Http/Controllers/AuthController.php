@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -45,15 +46,83 @@ class AuthController extends Controller
             'password.required' => 'A senha é obrigatória.',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
+        $user = User::where('email', $credentials['email'])->first();
 
-            return redirect()->intended(route('filament.painel.pages.dashboard'));
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'email' => 'Credenciais inválidas. Verifique seu e-mail e senha.',
+            ])->onlyInput('email');
         }
 
-        return back()->withErrors([
-            'email' => 'Credenciais inválidas. Verifique seu e-mail e senha.',
-        ])->onlyInput('email');
+        if (filled($user->getAppAuthenticationSecret())) {
+            $request->session()->put('pending_2fa_user_id', $user->id);
+            $request->session()->put('pending_2fa_remember', $request->boolean('remember'));
+
+            return redirect()->route('auth.login.mercado.2fa');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('filament.painel.pages.dashboard'));
+    }
+
+    public function show2faChallenge(Request $request)
+    {
+        if (! $request->session()->has('pending_2fa_user_id')) {
+            return redirect()->route('auth.login.mercado');
+        }
+
+        return view('auth.login-mercado-2fa');
+    }
+
+    public function verify2faChallenge(Request $request)
+    {
+        $userId = $request->session()->get('pending_2fa_user_id');
+
+        if (! $userId) {
+            return redirect()->route('auth.login.mercado');
+        }
+
+        $user = User::find($userId);
+
+        if (! $user || blank($user->getAppAuthenticationSecret())) {
+            $request->session()->forget(['pending_2fa_user_id', 'pending_2fa_remember']);
+
+            return redirect()->route('auth.login.mercado');
+        }
+
+        $request->validate([
+            'code' => ['nullable', 'string'],
+            'recovery_code' => ['nullable', 'string'],
+        ]);
+
+        $code = trim((string) $request->input('code'));
+        $recoveryCode = trim((string) $request->input('recovery_code'));
+
+        if (blank($code) && blank($recoveryCode)) {
+            return back()->withErrors(['code' => 'Informe o código do aplicativo ou um código de recuperação.']);
+        }
+
+        $appAuth = AppAuthentication::make()->recoverable();
+
+        $verified = filled($code)
+            ? $appAuth->verifyCode($code, $user->getAppAuthenticationSecret())
+            : $appAuth->verifyRecoveryCode($recoveryCode, $user);
+
+        if (! $verified) {
+            return back()->withErrors([
+                'code' => filled($code) ? 'Código inválido.' : 'Código de recuperação inválido.',
+            ]);
+        }
+
+        $remember = (bool) $request->session()->pull('pending_2fa_remember', false);
+        $request->session()->forget('pending_2fa_user_id');
+
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('filament.painel.pages.dashboard'));
     }
 
     public function showLoginSindico()

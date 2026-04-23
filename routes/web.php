@@ -13,6 +13,8 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
 
 Route::get('/login/mercado', [AuthController::class, 'showLoginMercado'])->name('auth.login.mercado');
 Route::post('/login/mercado', [AuthController::class, 'loginMercado'])->name('auth.login.mercado.submit')->middleware('throttle:6,1');
+Route::get('/login/mercado/2fa', [AuthController::class, 'show2faChallenge'])->name('auth.login.mercado.2fa');
+Route::post('/login/mercado/2fa', [AuthController::class, 'verify2faChallenge'])->name('auth.login.mercado.2fa.submit')->middleware('throttle:6,1');
 
 Route::get('/login/sindico', [AuthController::class, 'showLoginSindico'])->name('auth.login.sindico');
 Route::post('/login/sindico', [AuthController::class, 'loginSindico'])->name('auth.login.sindico.submit')->middleware('throttle:6,1');

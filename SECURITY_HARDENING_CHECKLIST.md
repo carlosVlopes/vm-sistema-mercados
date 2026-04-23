@@ -35,6 +35,7 @@ Três migrations novas vão rodar nesta ordem:
 1. `2026_04_22_100000_add_register_token_security_to_clients` — adiciona `register_token_expires_at` + índice prefix.
 2. `2026_04_22_100100_encrypt_user_api_tokens` — cifra tokens existentes (idempotente).
 3. `2026_04_22_100200_create_webhook_events_table` — nova tabela de idempotência do Stripe.
+4. `2026_04_23_100000_add_2fa_columns_to_users` — adiciona `app_authentication_secret` + `app_authentication_recovery_codes` (nullable, só preenchidos quando dono opta por 2FA).
 
 - [ ] Staging OK.
 - [ ] Produção OK.
@@ -135,6 +136,17 @@ Não afetam este deploy, mas ficam no radar.
 
 - [x] Validação real de CPF/CNPJ — pacote `laravellegends/pt-br-validator`, regra `cpf_ou_cnpj` aplicada em `AuthController::register`.
 - [x] Token em URL de `/registrar-senha/{token}` — **mitigação mínima aplicada** (não migrado para POST): `<meta name="referrer" content="no-referrer">` na view + header `Referrer-Policy: no-referrer` na resposta do GET. Token continua único-uso, hash SHA-256 no DB, expira em 72h. Migração completa p/ POST/sessão fica no backlog se algum dia virar requisito.
-- [ ] 2FA no painel admin (dono).
+- [x] 2FA no painel admin (dono) — MFA nativo do Filament 5 (TOTP + recovery codes). Enrollment via `/painel/profile`. Login custom em `/login/mercado` agora faz gate de 2FA: se usuário tem secret setado, redireciona para `/login/mercado/2fa` antes de logar. Instalado `bacon/bacon-qr-code` para renderizar QR code em SVG sem depender de imagick.
+
+### Operação do 2FA — coisas a saber
+
+- **Opt-in por usuário.** Cada dono entra em *Perfil* (menu canto superior direito no painel) e clica em "Configurar autenticação por app". Lê QR code no Google Authenticator/Authy, confirma, salva recovery codes.
+- **Escape hatch** se o dono perder o celular E os recovery codes: rodar via tinker:
+  ```php
+  User::find($id)->saveAppAuthenticationSecret(null);
+  User::find($id)->saveAppAuthenticationRecoveryCodes(null);
+  ```
+- **Síndico fica sem 2FA** (intencional — só painel do dono).
+- **Não força 2FA para todo mundo.** Se quiser tornar obrigatório, a regra pode ser aplicada no `FilamentAuthenticate` middleware (redirecionar para `/painel/profile` se `app_authentication_secret` estiver vazio). Não foi feito agora porque não estava no escopo.
 
 Quando quiser atacar, rodar `/security-review` ou pedir uma nova onda de agentes.
