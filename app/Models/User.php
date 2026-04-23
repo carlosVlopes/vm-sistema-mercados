@@ -26,8 +26,6 @@ class User extends Authenticatable implements FilamentUser
         'phonenumer',
         'document',
         'stripe_customer_id',
-        'stripe_subscription_id',
-        'subscription_status',
     ];
 
     /**

@@ -19,7 +19,9 @@ class ClientController extends Controller
             return redirect()->route('filament.sindico.auth.login')->withErrors(['token' => 'Token inválido ou expirado.']);
         }
 
-        return view('client-password-register', ['token' => $token, 'user' => $user]);
+        return response()
+            ->view('client-password-register', ['token' => $token, 'user' => $user])
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     public function storePassword(ClientPasswordRegister $request)

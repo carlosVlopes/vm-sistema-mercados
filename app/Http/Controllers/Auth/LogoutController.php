@@ -12,7 +12,8 @@ class LogoutController
         $panel = Filament::getCurrentPanel();
         $guard = $panel->getAuthGuard();
 
-        auth()->guard($guard)->logout();
+        auth()->guard('web')->logout();
+        auth()->guard('client')->logout();
 
         session()->invalidate();
         session()->regenerateToken();

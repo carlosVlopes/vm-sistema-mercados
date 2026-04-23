@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Definir Senha - RepassesJá</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -50,7 +51,8 @@
                             type="password"
                             name="password"
                             id="password"
-                            placeholder="••••••••"
+                            placeholder="Mín. 8 caracteres, maiúscula, minúscula e número"
+                            minlength="8"
                             class="fi-input w-full rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-900 transition"
                             style="background-color: #ffffff; border: 1px solid {{ $errors->has('password') ? '#ef4444' : '#d1d5db' }};"
                         >

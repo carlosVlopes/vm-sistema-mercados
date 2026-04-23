@@ -13,6 +13,7 @@
         "flowframe/laravel-trend": "*",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "laravellegends/pt-br-validator": "*",
         "stripe/stripe-php": "*"
     },
     "require-dev": {

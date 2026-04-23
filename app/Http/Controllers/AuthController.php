@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Stripe\StripeClient;
 
 class AuthController extends Controller
@@ -114,19 +115,22 @@ class AuthController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($pendingUser?->id),
             ],
-            'document' => ['required', 'string', 'max:18', Rule::unique('users', 'document')->ignore($pendingUser?->id)],
+            'document' => ['required', 'string', 'max:18', 'cpf_ou_cnpj', Rule::unique('users', 'document')->ignore($pendingUser?->id)],
             'phonenumer' => ['required', 'string', 'max:15'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'name.required' => 'O nome é obrigatório.',
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'Informe um e-mail válido.',
             'email.unique' => 'Este e-mail já está em uso.',
             'document.required' => 'O CPF/CNPJ é obrigatório.',
+            'document.cpf_ou_cnpj' => 'Informe um CPF ou CNPJ válido.',
             'document.unique' => 'Este CPF ou CNPJ já está em uso.',
             'phonenumer.required' => 'O celular é obrigatório.',
             'password.required' => 'A senha é obrigatória.',
             'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'password.mixed' => 'A senha deve conter letras maiúsculas e minúsculas.',
+            'password.numbers' => 'A senha deve conter pelo menos um número.',
             'password.confirmed' => 'As senhas não conferem.',
         ]);
 
@@ -150,14 +154,15 @@ class AuthController extends Controller
                 $user->update(['stripe_customer_id' => $customer->id]);
             }
         } else {
-            $user = User::create([
+            $user = new User([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'document' => $validated['document'],
                 'phonenumer' => $validated['phonenumer'],
                 'password' => Hash::make($validated['password']),
-                'subscription_status' => 'pending',
             ]);
+            $user->subscription_status = 'pending';
+            $user->save();
 
             $customer = $stripe->customers->create([
                 'email' => $user->email,
@@ -239,10 +244,9 @@ class AuthController extends Controller
             }
 
             if (! $user->hasActiveSubscription()) {
-                $user->update([
-                    'stripe_subscription_id' => $session->subscription,
-                    'subscription_status' => 'active',
-                ]);
+                $user->stripe_subscription_id = $session->subscription;
+                $user->subscription_status = 'active';
+                $user->save();
             }
 
             $pendingUserId = $request->session()->get('pending_user_id');

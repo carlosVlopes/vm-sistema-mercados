@@ -69,10 +69,9 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        $user->update([
-            'stripe_subscription_id' => $session->subscription,
-            'subscription_status' => 'active',
-        ]);
+        $user->stripe_subscription_id = $session->subscription;
+        $user->subscription_status = 'active';
+        $user->save();
     }
 
     private function handleSubscriptionUpdated(object $subscription): void
@@ -83,9 +82,8 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        $user->update([
-            'subscription_status' => $subscription->status,
-        ]);
+        $user->subscription_status = $subscription->status;
+        $user->save();
     }
 
     private function handleSubscriptionDeleted(object $subscription): void
@@ -96,8 +94,7 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        $user->update([
-            'subscription_status' => 'canceled',
-        ]);
+        $user->subscription_status = 'canceled';
+        $user->save();
     }
 }

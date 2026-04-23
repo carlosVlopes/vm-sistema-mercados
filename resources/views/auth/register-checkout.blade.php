@@ -85,10 +85,10 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script>
         (async function() {
-            const stripe = Stripe("{{ $stripePublishableKey }}");
+            const stripe = Stripe(@json($stripePublishableKey));
 
             const checkout = await stripe.initEmbeddedCheckout({
-                clientSecret: "{{ $clientSecret }}",
+                clientSecret: @json($clientSecret),
             });
 
             document.getElementById('checkout-loading').style.display = 'none';

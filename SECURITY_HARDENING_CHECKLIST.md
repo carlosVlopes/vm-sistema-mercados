@@ -120,16 +120,21 @@ php artisan config:clear && php artisan queue:restart
 
 ## 6. Itens que ficaram de fora (próxima onda)
 
-Não afetam este deploy, mas ficam no radar:
+Não afetam este deploy, mas ficam no radar.
 
-- [ ] `LogoutController::session()->invalidate()` derruba sessão compartilhada entre painéis.
-- [ ] Validação real de CPF/CNPJ (hoje aceita qualquer string de 18 chars).
-- [ ] Token em URL de `/registrar-senha/{token}` — migrar para POST / sessão temporária.
+### Feitos nesta segunda onda
+
+- [x] `LogoutController` agora desloga **ambos** os guards (`web` + `client`) antes de invalidar a sessão.
+- [x] `SetupAccount::validateToken` com `try/catch` + `Http::timeout(10)` → não trava o loader se API VM-PAY cair.
+- [x] `@json($clientSecret)` e `@json($stripePublishableKey)` no checkout (em vez de `"{{ }}"`).
+- [x] Política de senha forte `Password::min(8)->mixedCase()->numbers()` aplicada em `/registrar` e em `/registrar-senha/{token}`. Placeholder das views atualizado. **Nota:** `->uncompromised()` deixado fora de propósito — faz request HTTP p/ HIBP e pode travar o form se a API cair.
+- [x] `$fillable` de `User` — removidos `subscription_status` e `stripe_subscription_id`. Agora só ficam setáveis por atribuição direta (`$user->subscription_status = ...; $user->save();`). Ajustados os call sites em `AuthController`, `StripeWebhookController`, `ManageSubscription`.
+- [x] Middleware `ForceHttps` registrado no pipeline global em produção (via `bootstrap/app.php`, condicionado a `APP_ENV=production`).
+
+### Ainda pendentes (escopo maior — agendar)
+
+- [x] Validação real de CPF/CNPJ — pacote `laravellegends/pt-br-validator`, regra `cpf_ou_cnpj` aplicada em `AuthController::register`.
+- [x] Token em URL de `/registrar-senha/{token}` — **mitigação mínima aplicada** (não migrado para POST): `<meta name="referrer" content="no-referrer">` na view + header `Referrer-Policy: no-referrer` na resposta do GET. Token continua único-uso, hash SHA-256 no DB, expira em 72h. Migração completa p/ POST/sessão fica no backlog se algum dia virar requisito.
 - [ ] 2FA no painel admin (dono).
-- [ ] `SetupAccount::validateToken` sem try/catch → loader infinito se API cair.
-- [ ] `@json($clientSecret)` em vez de `{{ }}` no checkout.
-- [ ] Política de senha forte: `Password::min(8)->mixedCase()->numbers()->uncompromised()`.
-- [ ] Reavaliar `$fillable` de `User` — `subscription_status` e `stripe_subscription_id` não deveriam ser mass-assignable.
-- [ ] Registrar o middleware `ForceHttps` no pipeline de produção (hoje existe mas não está aplicado).
 
-Quando quiser atacar, rodar `/security-review` ou pedir uma segunda onda de agentes.
+Quando quiser atacar, rodar `/security-review` ou pedir uma nova onda de agentes.

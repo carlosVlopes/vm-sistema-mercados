@@ -125,7 +125,7 @@
                                 type="password"
                                 name="password"
                                 id="password"
-                                placeholder="Mínimo 8 caracteres"
+                                placeholder="Mín. 8 caracteres, maiúscula, minúscula e número"
                                 required
                                 minlength="8"
                                 class="fi-input w-full rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-900 transition border border-gray-300 bg-white"

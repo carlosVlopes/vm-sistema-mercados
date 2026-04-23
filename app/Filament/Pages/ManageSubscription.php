@@ -63,7 +63,8 @@ class ManageSubscription extends Page implements HasActions
             ];
 
             if ($user->subscription_status !== $sub->status) {
-                $user->update(['subscription_status' => $sub->status]);
+                $user->subscription_status = $sub->status;
+                $user->save();
             }
         } catch (\Exception $e) {
             $this->subscription = [
