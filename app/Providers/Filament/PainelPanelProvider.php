@@ -44,9 +44,10 @@ class PainelPanelProvider extends PanelProvider
             ->brandLogo(fn (): View => view('filament.brand-logo'))
             ->colors([
                 'primary' => Color::hex('#FC6E20'),
-                'warning' => Color::hex('#FFE7D0'),
+                'success' => Color::hex('#10b981'),
+                'warning' => Color::hex('#fbbf24'),
                 'danger' => Color::Red,
-                'success' => Color::Green,
+                'gray' => Color::Stone,
             ])
             ->userMenuItems([
                 MenuItem::make('configuracoes')

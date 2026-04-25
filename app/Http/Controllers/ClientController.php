@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Http\Requests\ClientPasswordRegister;
+use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
@@ -43,6 +44,9 @@ class ClientController extends Controller
         $user->register_token = null;
         $user->register_token_expires_at = null;
         $user->save();
+
+        Auth::guard('client')->login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('registrar-senha.sucesso');
     }

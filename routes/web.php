@@ -28,7 +28,9 @@ Route::get('/assinatura-reativar', [AuthController::class, 'reactivateSubscripti
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
-Route::get('/registrar-senha/sucesso', fn () => view('client-password-success'))->name('registrar-senha.sucesso');
+Route::get('/registrar-senha/sucesso', fn () => view('client-password-success'))
+    ->middleware('auth:client')
+    ->name('registrar-senha.sucesso');
 
 Route::get('/registrar-senha/{token}', [ClientController::class, 'registerPassword'])->name('registrar-senha');
 
