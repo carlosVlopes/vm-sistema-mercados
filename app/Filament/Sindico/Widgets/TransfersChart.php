@@ -24,7 +24,7 @@ class TransfersChart extends ChartWidget
     public function filtersSchema(Schema $schema): Schema
     {
         $condominiums = \DB::table('clients_condominiums')
-            ->where('client_id', auth()->id())
+            ->where('client_id', auth('client')->id())
             ->whereNotNull('name')
             ->orderBy('name')
             ->pluck('name', 'name')
@@ -43,7 +43,7 @@ class TransfersChart extends ChartWidget
         $months = collect(range(1, 12));
 
         $query = Transfer::query()
-            ->where('client_id', auth()->id())
+            ->where('client_id', auth('client')->id())
             ->whereBetween('period_start', [now()->startOfYear(), now()->endOfYear()]);
 
         if (! empty($this->filters['condominium_name'])) {

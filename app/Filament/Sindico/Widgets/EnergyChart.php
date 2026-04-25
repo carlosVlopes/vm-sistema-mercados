@@ -22,13 +22,13 @@ class EnergyChart extends ChartWidget
 
     public static function canView(): bool
     {
-        return auth()->user()->receives_light;
+        return (bool) auth('client')->user()?->receives_light;
     }
 
     public function filtersSchema(Schema $schema): Schema
     {
         $condominiums = \DB::table('clients_condominiums')
-            ->where('client_id', auth()->id())
+            ->where('client_id', auth('client')->id())
             ->whereNotNull('name')
             ->orderBy('name')
             ->pluck('name', 'name')
@@ -47,7 +47,7 @@ class EnergyChart extends ChartWidget
         $months = collect(range(1, 12));
 
         $query = Transfer::query()
-            ->where('client_id', auth()->id())
+            ->where('client_id', auth('client')->id())
             ->whereBetween('period_start', [now()->startOfYear(), now()->endOfYear()]);
 
         if (! empty($this->filters['condominium_name'])) {
