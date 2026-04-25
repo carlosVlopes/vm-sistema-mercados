@@ -29,15 +29,7 @@
                 </p>
             </div>
 
-            @if ($errors->any())
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <x-alert-popup />
 
             <form action="{{ route('auth.login.mercado.2fa.submit') }}" method="POST" class="space-y-4"
                   x-data="{ mode: 'code' }">

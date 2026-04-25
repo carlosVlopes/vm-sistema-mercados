@@ -38,6 +38,8 @@
                 </p>
             </div>
 
+            <x-alert-popup />
+
             <form action="{{ route('registrar-senha.store', ['token' => $token]) }}" method="POST" class="space-y-4">
                 @csrf
 
