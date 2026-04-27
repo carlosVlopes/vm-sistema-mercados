@@ -3,8 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureActiveSubscription;
+use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\SetUserSettings;
-use Filament\Http\Middleware\Authenticate;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -36,13 +37,17 @@ class PainelPanelProvider extends PanelProvider
             ->authGuard('web')
             ->login()
             ->profile()
+            ->multiFactorAuthentication(
+                AppAuthentication::make()->recoverable(),
+            )
             ->brandName('RepassesJá')
             ->brandLogo(fn (): View => view('filament.brand-logo'))
             ->colors([
                 'primary' => Color::hex('#FC6E20'),
-                'warning' => Color::hex('#FFE7D0'),
+                'success' => Color::hex('#10b981'),
+                'warning' => Color::hex('#fbbf24'),
                 'danger' => Color::Red,
-                'success' => Color::Green,
+                'gray' => Color::Stone,
             ])
             ->userMenuItems([
                 MenuItem::make('configuracoes')
@@ -75,7 +80,7 @@ class PainelPanelProvider extends PanelProvider
                 SetUserSettings::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                FilamentAuthenticate::class,
             ]);
     }
 }

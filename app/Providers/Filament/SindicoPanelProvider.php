@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
+use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -34,9 +34,10 @@ class SindicoPanelProvider extends PanelProvider
             ->brandLogo(fn (): View => view('filament.brand-logo'))
             ->colors([
                 'primary' => Color::hex('#FC6E20'),
-                'warning' => Color::hex('#FFE7D0'),
+                'success' => Color::hex('#10b981'),
+                'warning' => Color::hex('#fbbf24'),
                 'danger' => Color::Red,
-                'success' => Color::Green,
+                'gray' => Color::Stone,
             ])
             ->discoverResources(in: app_path('Filament/Sindico/Resources'), for: 'App\Filament\Sindico\Resources')
             ->discoverPages(in: app_path('Filament/Sindico/Pages'), for: 'App\Filament\Sindico\Pages')
@@ -55,7 +56,7 @@ class SindicoPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                FilamentAuthenticate::class,
             ]);
     }
 }

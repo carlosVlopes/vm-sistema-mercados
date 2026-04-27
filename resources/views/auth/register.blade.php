@@ -40,15 +40,7 @@
                 <div class="step-indicator step-inactive">2</div>
             </div>
 
-            @if ($errors->any())
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <x-alert-popup />
 
             <form action="{{ route('auth.register.submit') }}" method="POST" id="register-form">
                 @csrf
@@ -125,7 +117,7 @@
                                 type="password"
                                 name="password"
                                 id="password"
-                                placeholder="Mínimo 8 caracteres"
+                                placeholder="Mín. 8 caracteres, maiúscula, minúscula e número"
                                 required
                                 minlength="8"
                                 class="fi-input w-full rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-900 transition border border-gray-300 bg-white"

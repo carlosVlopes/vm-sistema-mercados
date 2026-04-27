@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="referrer" content="no-referrer">
-  <title>RepassesJá — Definir Senha</title>
+  <title>RepassesJá — Login Síndico</title>
   <link rel="icon" href="{{ asset('favicon.ico') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -128,10 +127,6 @@
       margin-bottom: 6px;
     }
 
-    .required {
-      color: var(--danger);
-    }
-
     input[type="email"],
     input[type="password"],
     input[type="text"] {
@@ -151,10 +146,6 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(252,110,32,0.10);
       background: #fff;
-    }
-
-    input.has-error {
-      border-color: var(--danger);
     }
 
     .field-error {
@@ -187,6 +178,40 @@
 
     .toggle-pw:hover { color: var(--primary); }
 
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      margin-top: 4px;
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--gray-600);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .remember input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .forgot {
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .forgot:hover { text-decoration: underline; }
+
     .btn-primary {
       width: 100%;
       padding: 14px;
@@ -201,7 +226,6 @@
       transition: opacity 0.18s, transform 0.15s, box-shadow 0.18s;
       box-shadow: 0 4px 14px rgba(252,110,32,0.30);
       letter-spacing: 0.1px;
-      margin-top: 6px;
     }
 
     .btn-primary:hover {
@@ -213,11 +237,26 @@
     .btn-primary:active {
       transform: translateY(0);
     }
+
+    .back-link {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .back-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-  <a href="/" class="logo">
+  <a href="{{ route('auth.login') }}" class="logo">
     @include('filament.brand-logo')
   </a>
 
@@ -232,32 +271,31 @@
         </svg>
         Síndico
       </div>
-      <h1>Olá, {{ $user->name }}</h1>
-      <p class="subtitle">Defina sua senha para acessar o sistema</p>
+      <h1>Acesse seu painel</h1>
+      <p class="subtitle">Entre com suas credenciais para ver seus repasses</p>
     </div>
 
     <div class="divider"></div>
 
     <x-alert-popup />
 
-    <form action="{{ route('registrar-senha.store', ['token' => $token]) }}" method="POST">
+    <form action="{{ route('auth.login.sindico.submit') }}" method="POST">
       @csrf
 
       <div class="form-group">
-        <label for="password">Senha <span class="required">*</span></label>
+        <label for="email">E-mail</label>
+        <input type="email" name="email" id="email" value="{{ old('email') }}" placeholder="seu@email.com" autocomplete="email" required />
+        @error('email')
+          <p class="field-error">{{ $message }}</p>
+        @enderror
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
         <div class="password-wrapper">
-          <input
-            type="password"
-            name="password"
-            id="password"
-            placeholder="Mín. 8 caracteres, maiúscula, minúscula e número"
-            minlength="8"
-            autocomplete="new-password"
-            required
-            class="{{ $errors->has('password') ? 'has-error' : '' }}"
-          />
-          <button class="toggle-pw" type="button" onclick="togglePassword('password', 'eye-password')" aria-label="Mostrar/ocultar senha">
-            <svg id="eye-password" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <input type="password" name="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+          <button class="toggle-pw" type="button" onclick="togglePw()" aria-label="Mostrar/ocultar senha">
+            <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
             </svg>
@@ -268,45 +306,26 @@
         @enderror
       </div>
 
-      <div class="form-group">
-        <label for="password_confirm">Confirmar Senha <span class="required">*</span></label>
-        <div class="password-wrapper">
-          <input
-            type="password"
-            name="password_confirm"
-            id="password_confirm"
-            placeholder="••••••••"
-            autocomplete="new-password"
-            required
-            class="{{ $errors->has('password_confirm') ? 'has-error' : '' }}"
-          />
-          <button class="toggle-pw" type="button" onclick="togglePassword('password_confirm', 'eye-confirm')" aria-label="Mostrar/ocultar senha">
-            <svg id="eye-confirm" width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </button>
-        </div>
-        @error('password_confirm')
-          <p class="field-error">{{ $message }}</p>
-        @enderror
+      <div class="row-between">
+        <label class="remember">
+          <input type="checkbox" name="remember" /> Lembrar de mim
+        </label>
+        <a href="#" class="forgot">Esqueci minha senha</a>
       </div>
 
-      <button type="submit" class="btn-primary">Salvar Senha</button>
+      <button type="submit" class="btn-primary">Entrar no Painel</button>
     </form>
 
   </div>
 
-  <script>
-    const eyeOpen = `<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>`;
-    const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+  <p class="back-link">
+    <a href="{{ route('auth.login') }}">← Voltar à seleção de acesso</a>
+  </p>
 
-    function togglePassword(inputId, iconId) {
-      const input = document.getElementById(inputId);
-      const icon = document.getElementById(iconId);
-      const isHidden = input.type === 'password';
-      input.type = isHidden ? 'text' : 'password';
-      icon.innerHTML = isHidden ? eyeClosed : eyeOpen;
+  <script>
+    function togglePw() {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
     }
   </script>
 

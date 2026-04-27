@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Stripe\StripeClient;
 
 class AuthController extends Controller
@@ -17,10 +19,23 @@ class AuthController extends Controller
             return redirect()->route('filament.painel.pages.dashboard');
         }
 
+        if (Auth::guard('client')->check()) {
+            return redirect()->route('filament.sindico.pages.dashboard');
+        }
+
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function showLoginMercado()
+    {
+        if (Auth::check()) {
+            return redirect()->route('filament.painel.pages.dashboard');
+        }
+
+        return view('auth.login-mercado');
+    }
+
+    public function loginMercado(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -31,10 +46,109 @@ class AuthController extends Controller
             'password.required' => 'A senha é obrigatória.',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'email' => 'Credenciais inválidas. Verifique seu e-mail e senha.',
+            ])->onlyInput('email');
+        }
+
+        if (filled($user->getAppAuthenticationSecret())) {
+            $request->session()->put('pending_2fa_user_id', $user->id);
+            $request->session()->put('pending_2fa_remember', $request->boolean('remember'));
+
+            return redirect()->route('auth.login.mercado.2fa');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('filament.painel.pages.dashboard'));
+    }
+
+    public function show2faChallenge(Request $request)
+    {
+        if (! $request->session()->has('pending_2fa_user_id')) {
+            return redirect()->route('auth.login.mercado');
+        }
+
+        return view('auth.login-mercado-2fa');
+    }
+
+    public function verify2faChallenge(Request $request)
+    {
+        $userId = $request->session()->get('pending_2fa_user_id');
+
+        if (! $userId) {
+            return redirect()->route('auth.login.mercado');
+        }
+
+        $user = User::find($userId);
+
+        if (! $user || blank($user->getAppAuthenticationSecret())) {
+            $request->session()->forget(['pending_2fa_user_id', 'pending_2fa_remember']);
+
+            return redirect()->route('auth.login.mercado');
+        }
+
+        $request->validate([
+            'code' => ['nullable', 'string'],
+            'recovery_code' => ['nullable', 'string'],
+        ]);
+
+        $code = trim((string) $request->input('code'));
+        $recoveryCode = trim((string) $request->input('recovery_code'));
+
+        if (blank($code) && blank($recoveryCode)) {
+            return back()->withErrors(['code' => 'Informe o código do aplicativo ou um código de recuperação.']);
+        }
+
+        $appAuth = AppAuthentication::make()->recoverable();
+
+        $verified = filled($code)
+            ? $appAuth->verifyCode($code, $user->getAppAuthenticationSecret())
+            : $appAuth->verifyRecoveryCode($recoveryCode, $user);
+
+        if (! $verified) {
+            return back()->withErrors([
+                'code' => filled($code) ? 'Código inválido.' : 'Código de recuperação inválido.',
+            ]);
+        }
+
+        $remember = (bool) $request->session()->pull('pending_2fa_remember', false);
+        $request->session()->forget('pending_2fa_user_id');
+
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('filament.painel.pages.dashboard'));
+    }
+
+    public function showLoginSindico()
+    {
+        if (Auth::guard('client')->check()) {
+            return redirect()->route('filament.sindico.pages.dashboard');
+        }
+
+        return view('auth.login-sindico');
+    }
+
+    public function loginSindico(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ], [
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Informe um e-mail válido.',
+            'password.required' => 'A senha é obrigatória.',
+        ]);
+
+        if (Auth::guard('client')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('filament.painel.pages.dashboard'));
+            return redirect()->intended(route('filament.sindico.pages.dashboard'));
         }
 
         return back()->withErrors([
@@ -57,9 +171,10 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $pendingUser = User::where('email', $request->email)
-            ->where('subscription_status', 'pending')
-            ->first();
+        $pendingUserId = $request->session()->get('pending_user_id');
+        $pendingUser = $pendingUserId
+            ? User::where('id', $pendingUserId)->where('subscription_status', 'pending')->first()
+            : null;
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -69,19 +184,22 @@ class AuthController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($pendingUser?->id),
             ],
-            'document' => ['required', 'string', 'max:18', Rule::unique('users', 'document')->ignore($pendingUser?->id)],
+            'document' => ['required', 'string', 'max:18', 'cpf_ou_cnpj', Rule::unique('users', 'document')->ignore($pendingUser?->id)],
             'phonenumer' => ['required', 'string', 'max:15'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'name.required' => 'O nome é obrigatório.',
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'Informe um e-mail válido.',
             'email.unique' => 'Este e-mail já está em uso.',
             'document.required' => 'O CPF/CNPJ é obrigatório.',
+            'document.cpf_ou_cnpj' => 'Informe um CPF ou CNPJ válido.',
             'document.unique' => 'Este CPF ou CNPJ já está em uso.',
             'phonenumer.required' => 'O celular é obrigatório.',
             'password.required' => 'A senha é obrigatória.',
             'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'password.mixed' => 'A senha deve conter letras maiúsculas e minúsculas.',
+            'password.numbers' => 'A senha deve conter pelo menos um número.',
             'password.confirmed' => 'As senhas não conferem.',
         ]);
 
@@ -105,14 +223,15 @@ class AuthController extends Controller
                 $user->update(['stripe_customer_id' => $customer->id]);
             }
         } else {
-            $user = User::create([
+            $user = new User([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'document' => $validated['document'],
                 'phonenumer' => $validated['phonenumer'],
                 'password' => Hash::make($validated['password']),
-                'subscription_status' => 'pending',
             ]);
+            $user->subscription_status = 'pending';
+            $user->save();
 
             $customer = $stripe->customers->create([
                 'email' => $user->email,
@@ -188,19 +307,29 @@ class AuthController extends Controller
         if ($session->status === 'complete') {
             $user = User::find($session->client_reference_id);
 
-            if ($user && ! $user->hasActiveSubscription()) {
-                $user->update([
-                    'stripe_subscription_id' => $session->subscription,
-                    'subscription_status' => 'active',
-                ]);
+            if (! $user) {
+                return redirect()->route('auth.register')
+                    ->withErrors(['email' => 'Usuário não encontrado.']);
             }
 
-            if ($user) {
+            if (! $user->hasActiveSubscription()) {
+                $user->stripe_subscription_id = $session->subscription;
+                $user->subscription_status = 'active';
+                $user->save();
+            }
+
+            $pendingUserId = $request->session()->get('pending_user_id');
+
+            if ((int) $pendingUserId === (int) $user->id) {
                 $request->session()->forget('pending_user_id');
                 Auth::login($user);
+                $request->session()->regenerate();
 
                 return redirect()->route('filament.painel.pages.dashboard');
             }
+
+            return redirect()->route('auth.login.mercado')
+                ->with('success', 'Pagamento confirmado! Faça login para acessar o painel.');
         }
 
         if ($session->status === 'open') {

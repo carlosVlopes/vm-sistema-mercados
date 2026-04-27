@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 
@@ -21,12 +23,40 @@ class StripeWebhookController extends Controller
             return response()->json(['error' => 'Invalid signature'], 400);
         }
 
-        match ($event->type) {
-            'checkout.session.completed' => $this->handleCheckoutSessionCompleted($event->data->object),
-            'customer.subscription.updated' => $this->handleSubscriptionUpdated($event->data->object),
-            'customer.subscription.deleted' => $this->handleSubscriptionDeleted($event->data->object),
-            default => null,
-        };
+        $existing = \DB::table('webhook_events')->where('stripe_event_id', $event->id)->first();
+
+        if ($existing && $existing->processed_at) {
+            return response()->json(['status' => 'duplicate']);
+        }
+
+        $webhookRowId = $existing->id ?? \DB::table('webhook_events')->insertGetId([
+            'stripe_event_id' => $event->id,
+            'type' => $event->type,
+            'payload' => json_encode($event->toArray()),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        try {
+            match ($event->type) {
+                'checkout.session.completed' => $this->handleCheckoutSessionCompleted($event->data->object),
+                'customer.subscription.updated' => $this->handleSubscriptionUpdated($event->data->object),
+                'customer.subscription.deleted' => $this->handleSubscriptionDeleted($event->data->object),
+                default => null,
+            };
+
+            DB::table('webhook_events')
+                ->where('id', $webhookRowId)
+                ->update(['processed_at' => now(), 'updated_at' => now()]);
+        } catch (\Throwable $e) {
+            Log::error('Stripe webhook failed', [
+                'event' => $event->id,
+                'type' => $event->type,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['status' => 'error'], 500);
+        }
 
         return response()->json(['status' => 'ok']);
     }
@@ -35,16 +65,13 @@ class StripeWebhookController extends Controller
     {
         $user = User::find($session->client_reference_id);
 
-        if (! $user) {
+        if (! $user || $user->subscription_status === 'active') {
             return;
         }
 
-        $user->where('id', $user->id)
-            ->where('subscription_status', '!=', 'active')
-            ->update([
-                'stripe_subscription_id' => $session->subscription,
-                'subscription_status' => 'active',
-            ]);
+        $user->stripe_subscription_id = $session->subscription;
+        $user->subscription_status = 'active';
+        $user->save();
     }
 
     private function handleSubscriptionUpdated(object $subscription): void
@@ -55,9 +82,8 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        $user->update([
-            'subscription_status' => $subscription->status,
-        ]);
+        $user->subscription_status = $subscription->status;
+        $user->save();
     }
 
     private function handleSubscriptionDeleted(object $subscription): void
@@ -68,8 +94,7 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        $user->update([
-            'subscription_status' => 'canceled',
-        ]);
+        $user->subscription_status = 'canceled';
+        $user->save();
     }
 }

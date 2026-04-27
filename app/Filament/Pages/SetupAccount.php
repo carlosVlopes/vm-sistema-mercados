@@ -123,9 +123,15 @@ class SetupAccount extends Page implements HasForms
     {
         $data = $this->data;
 
-        $response = Http::get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
-            'access_token' => $data['api_token'],
-        ]);
+        try {
+            $response = Http::timeout(10)->get('https://vmpay.vertitecnologia.com.br/api/v1/clients', [
+                'access_token' => $data['api_token'],
+            ]);
+        } catch (\Throwable $e) {
+            $this->status = 'error';
+
+            return;
+        }
 
         if ($response->status() != 200) {
             $this->status = 'error';
