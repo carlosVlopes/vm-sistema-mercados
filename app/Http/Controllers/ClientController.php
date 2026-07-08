@@ -10,9 +10,7 @@ class ClientController extends Controller
 {
     public function registerPassword($token)
     {
-        $hash = hash('sha256', $token);
-
-        $user = Client::where('register_token', $hash)
+        $user = Client::where('register_token', $token)
             ->where('register_token_expires_at', '>', now())
             ->first();
 

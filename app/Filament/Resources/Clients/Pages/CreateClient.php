@@ -69,7 +69,10 @@ class CreateClient extends CreateRecord
         $data['user_id'] = auth()->id();
 
         $plainToken = Str::random(64);
-        $data['register_token'] = hash('sha256', $plainToken);
+
+        $plainToken = hash('sha256', $plainToken);
+
+        $data['register_token'] = $plainToken;
         $data['register_token_expires_at'] = now()->addHours(72);
 
         $this->plainToken = $plainToken;

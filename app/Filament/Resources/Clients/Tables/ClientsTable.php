@@ -59,7 +59,7 @@ class ClientsTable
                     ->button()
                     ->tooltip('Copiar link de registro de senha')
                     ->action(function ($record, $livewire) {
-                        $text = config('app.url') . '/registrar-senha/' . $record->register_token;
+                        $text = config('app.url') . 'registrar-senha/' . $record->register_token;
                         $livewire->js("navigator.clipboard.writeText('{$text}')");
                         
                         Notification::make()
