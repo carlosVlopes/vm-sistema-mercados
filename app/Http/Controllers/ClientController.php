@@ -27,9 +27,7 @@ class ClientController extends Controller
     {
         $request->only(['token', 'password', 'password_confirm']);
 
-        $hash = hash('sha256', $request->token);
-
-        $user = Client::where('register_token', $hash)
+        $user = Client::where('register_token', $request->token)
             ->where('register_token_expires_at', '>', now())
             ->whereNull('password')
             ->first();
