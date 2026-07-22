@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Transfers;
 
 use App\Filament\Resources\Transfers\Pages\CreateTransfer;
+use App\Filament\Resources\Transfers\Pages\EditTransfer;
 use App\Filament\Resources\Transfers\Pages\ListTransfers;
 use App\Filament\Resources\Transfers\Pages\ViewTransfer;
 use App\Filament\Resources\Transfers\Schemas\TransferForm;
@@ -72,6 +73,7 @@ class TransferResource extends Resource
         return [
             'index' => ListTransfers::route('/'),
             'create' => CreateTransfer::route('/create'),
+            'edit' => EditTransfer::route('/{record}/edit'),
             'view' => ViewTransfer::route('/{record}'),
         ];
     }

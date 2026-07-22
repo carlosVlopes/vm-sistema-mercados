@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Transfers\Tables;
 
 use App\Models\Transfer;
 use Brick\Money\Money;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
@@ -111,12 +111,18 @@ class TransfersTable
                     }),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
-                ActionGroup::make([
-                    ViewAction::make()
-                        ->icon('heroicon-o-eye'),
-                    DeleteAction::make()
-                        ->requiresConfirmation()
-                ])
+                ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->hiddenLabel()
+                    ->button(),
+                EditAction::make()
+                    ->hiddenLabel()
+                    ->button()
+                    ->color('primary'),
+                DeleteAction::make()
+                    ->hiddenLabel()
+                    ->button()
+                    ->requiresConfirmation(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
